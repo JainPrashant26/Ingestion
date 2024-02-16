@@ -1,0 +1,16 @@
+{
+    "linkedServices": [
+        "/linkedService/ls_az_adls.json"
+    ],
+    "datasets": [
+        "/dataset/ds_json.json",
+        "/dataset/ds_az_adls_excel.json",
+        "/dataset/ds_parquet.json"
+    ],
+    "pipelines": [
+        "/pipeline/adls_excel_ingestion.json"
+    ],
+    "triggers": [
+        "/trigger/tr_scheduled_adls_excel.json"
+    ]
+}

@@ -1,0 +1,702 @@
+{
+	"name": "ingestion_orchestration",
+	"properties": {
+		"activities": [
+			{
+				"name": "Switch Activity",
+				"description": "This activity switch between the ingestion pipeline pattern and will run the specified ingestion pipeline.",
+				"type": "Switch",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"on": {
+						"value": "@pipeline().parameters.pattern_name",
+						"type": "Expression"
+					},
+					"cases": [
+						{
+							"value": "adls_excel_ingestion_master",
+							"activities": [
+								{
+									"name": "Execute ADLS Excel Ingestion Master",
+									"description": "This activity will execute the master pipeline- adls_excel_ingestion_master.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "adls_excel_ingestion_master",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"src_adls_account_name": {
+												"value": "@pipeline().parameters.src_adls_account_name",
+												"type": "Expression"
+											},
+											"src_container": {
+												"value": "@pipeline().parameters.src_container",
+												"type": "Expression"
+											},
+											"src_file_path": {
+												"value": "@pipeline().parameters.src_file_path",
+												"type": "Expression"
+											},
+											"config_act_ls_adls_account_name": {
+												"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"config_container": {
+												"value": "@pipeline().parameters.config_container",
+												"type": "Expression"
+											},
+											"config_file_path": {
+												"value": "@pipeline().parameters.config_file_path",
+												"type": "Expression"
+											},
+											"config_files_list": {
+												"value": "@pipeline().parameters.config_files_list",
+												"type": "Expression"
+											},
+											"sink_adls_account_name": {
+												"value": "@pipeline().parameters.sink_adls_account_name",
+												"type": "Expression"
+											},
+											"sink_container": {
+												"value": "@pipeline().parameters.sink_container",
+												"type": "Expression"
+											},
+											"sink_file_path": {
+												"value": "@pipeline().parameters.sink_file_path",
+												"type": "Expression"
+											},
+											"partition_level": {
+												"value": "@pipeline().parameters.partition_level",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						},
+						{
+							"value": "adls_file_ingestion_watermark",
+							"activities": [
+								{
+									"name": "Execute ADLS File Ingestion Watermark",
+									"description": "This activity will execute the child pipeline- adls_file_ingestion_watermark.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "adls_file_ingestion_watermark",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"src_ls_adls_account_name": {
+												"value": "@pipeline().parameters.src_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"src_container_name": {
+												"value": "@pipeline().parameters.src_container_name",
+												"type": "Expression"
+											},
+											"src_file_path": {
+												"value": "@pipeline().parameters.src_file_path",
+												"type": "Expression"
+											},
+											"sink_ls_adls_account_name": {
+												"value": "@pipeline().parameters.sink_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"sink_container_name": {
+												"value": "@pipeline().parameters.sink_container_name",
+												"type": "Expression"
+											},
+											"sink_file_path": {
+												"value": "@pipeline().parameters.sink_file_path",
+												"type": "Expression"
+											},
+											"watermark_file_path": {
+												"value": "@pipeline().parameters.watermark_file_path",
+												"type": "Expression"
+											},
+											"watermark_file_prefix": {
+												"value": "@pipeline().parameters.watermark_file_prefix",
+												"type": "Expression"
+											},
+											"init_watermark": {
+												"value": "@pipeline().parameters.init_watermark",
+												"type": "Expression"
+											},
+											"test_file_path": {
+												"value": "@pipeline().parameters.test_file_path",
+												"type": "Expression"
+											},
+											"test_file_name": {
+												"value": "@pipeline().parameters.test_file_name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						},
+						{
+							"value": "az_sql_adls_ingestion_bulk_master",
+							"activities": [
+								{
+									"name": "Execute Azure SQL Bulk Ingestion Matster",
+									"description": "This activity will execute the master pipeline- az_sql_bulk_ingestion_master.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "az_sql_adls_ingestion_bulk_master",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"config_act_ls_adls_account_name": {
+												"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"config_file_container": {
+												"value": "@pipeline().parameters.config_file_container",
+												"type": "Expression"
+											},
+											"config_file_path": {
+												"value": "@pipeline().parameters.config_file_path",
+												"type": "Expression"
+											},
+											"config_files_list": {
+												"value": "@pipeline().parameters.config_files_list",
+												"type": "Expression"
+											},
+											"src_ls_keyvault_name": {
+												"value": "@pipeline().parameters.src_ls_keyvault_name",
+												"type": "Expression"
+											},
+											"src_ls_sql_conn_secret_name": {
+												"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+												"type": "Expression"
+											},
+											"sink_ls_adls_account_name": {
+												"value": "@pipeline().parameters.sink_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"sink_container_name": {
+												"value": "@pipeline().parameters.sink_container_name",
+												"type": "Expression"
+											},
+											"sink_file_path": {
+												"value": "@pipeline().parameters.sink_file_path",
+												"type": "Expression"
+											},
+											"partition_level": {
+												"value": "@pipeline().parameters.partition_level",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						},
+						{
+							"value": "az_sql_adls_ingestion_watermark_master",
+							"activities": [
+								{
+									"name": "Execute Azure SQL ingestion watermark Master",
+									"description": "This activity will execute the master pipeline- az_sql_adls_ingestion_watermark_master.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "az_sql_adls_ingestion_watermark_master",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"init_watermark": {
+												"value": "@pipeline().parameters.init_watermark",
+												"type": "Expression"
+											},
+											"config_act_ls_adls_account_name": {
+												"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"config_file_container": {
+												"value": "@pipeline().parameters.config_file_container",
+												"type": "Expression"
+											},
+											"config_file_path": {
+												"value": "@pipeline().parameters.config_file_path",
+												"type": "Expression"
+											},
+											"config_files_list": {
+												"value": "@pipeline().parameters.config_files_list",
+												"type": "Expression"
+											},
+											"src_ls_keyvault_name": {
+												"value": "@pipeline().parameters.src_ls_keyvault_name",
+												"type": "Expression"
+											},
+											"src_ls_sql_conn_secret_name": {
+												"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+												"type": "Expression"
+											},
+											"sink_ls_adls_account_name": {
+												"value": "@pipeline().parameters.sink_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"sink_container_name": {
+												"value": "@pipeline().parameters.sink_container_name",
+												"type": "Expression"
+											},
+											"sink_file_path": {
+												"value": "@pipeline().parameters.sink_file_path",
+												"type": "Expression"
+											},
+											"watermark_file_path": {
+												"value": "@pipeline().parameters.watermark_file_path",
+												"type": "Expression"
+											},
+											"watermark_file_prefix": {
+												"value": "@pipeline().parameters.watermark_file_prefix",
+												"type": "Expression"
+											},
+											"partition_level": {
+												"value": "@pipeline().parameters.partition_level",
+												"type": "Expression"
+											},
+											"successful_ingestion_metadata_file_path": {
+												"value": "@pipeline().parameters.successful_ingestion_metadata_file_path",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						},
+						{
+							"value": "sap_hana_ingestion_watermark_master",
+							"activities": [
+								{
+									"name": "Execute SAP HANA ingestion watermark Master",
+									"description": "This activity will execute the master pipeline- sap_hana_ingestion_watermark_master.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "sap_hana_ingestion_watermark_master",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"init_watermark": {
+												"value": "@pipeline().parameters.init_watermark",
+												"type": "Expression"
+											},
+											"config_act_ls_adls_account_name": {
+												"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"config_act_ls_keyvault_name": {
+												"value": "@pipeline().parameters.config_act_ls_keyvault_name",
+												"type": "Expression"
+											},
+											"config_act_ls_adls_secret_name": {
+												"value": "@pipeline().parameters.config_act_ls_adls_secret_name",
+												"type": "Expression"
+											},
+											"config_file_container": {
+												"value": "@pipeline().parameters.config_file_container",
+												"type": "Expression"
+											},
+											"config_file_path": {
+												"value": "@pipeline().parameters.config_file_path",
+												"type": "Expression"
+											},
+											"config_files_list": {
+												"value": "@pipeline().parameters.config_files_list",
+												"type": "Expression"
+											},
+											"src_ls_keyvault_name": {
+												"value": "@pipeline().parameters.src_ls_keyvault_name",
+												"type": "Expression"
+											},
+											"src_ls_sql_conn_secret_name": {
+												"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+												"type": "Expression"
+											},
+											"sink_ls_adls_account_name": {
+												"value": "@pipeline().parameters.sink_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"sink_ls_keyvault_name": {
+												"value": "@pipeline().parameters.sink_ls_keyvault_name",
+												"type": "Expression"
+											},
+											"sink_ls_adls_secret_name": {
+												"value": "@pipeline().parameters.sink_ls_adls_secret_name",
+												"type": "Expression"
+											},
+											"sink_container_name": {
+												"value": "@pipeline().parameters.sink_container_name",
+												"type": "Expression"
+											},
+											"sink_file_path": {
+												"value": "@pipeline().parameters.sink_file_path",
+												"type": "Expression"
+											},
+											"watermark_file_path": {
+												"value": "@pipeline().parameters.watermark_file_path",
+												"type": "Expression"
+											},
+											"watermark_file_prefix": {
+												"value": "@pipeline().parameters.watermark_file_prefix",
+												"type": "Expression"
+											},
+											"partition_level": {
+												"value": "@pipeline().parameters.partition_level",
+												"type": "Expression"
+											},
+											"successful_ingestion_metadata_file_path": {
+												"value": "@pipeline().parameters.successful_ingestion_metadata_file_path",
+												"type": "Expression"
+											},
+											"sink_file_name": {
+												"value": "@pipeline().parameters.sink_file_name",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						},
+						{
+							"value": "sap_hana_to_adls_bulk_ingestion_master",
+							"activities": [
+								{
+									"name": "Execute Azure SQL Bulk Ingestion Master",
+									"description": "This activity will execute the master pipeline- sap_hana_to_adls_bulk_ingestion_master.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "sap_hana_to_adls_bulk_ingestion_master",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"config_act_ls_adls_account_name": {
+												"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"config_file_container": {
+												"value": "@pipeline().parameters.config_file_container",
+												"type": "Expression"
+											},
+											"config_file_path": {
+												"value": "@pipeline().parameters.config_file_path",
+												"type": "Expression"
+											},
+											"config_files_list": {
+												"value": "@pipeline().parameters.config_files_list",
+												"type": "Expression"
+											},
+											"sink_ls_adls_account_name": {
+												"value": "@pipeline().parameters.sink_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"sink_container_name": {
+												"value": "@pipeline().parameters.sink_container_name",
+												"type": "Expression"
+											},
+											"sink_file_path": {
+												"value": "@pipeline().parameters.sink_file_path",
+												"type": "Expression"
+											},
+											"partition_level": {
+												"value": "@pipeline().parameters.partition_level",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						},
+						{
+							"value": "sql_adls_ingestion_bulk_master",
+							"activities": [
+								{
+									"name": "Execute SQL Bulk Ingestion Mater",
+									"description": "This activity will execute the master pipeline- sql_bulk_ingestion_master.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "az_sql_adls_ingestion_bulk_master",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"config_act_ls_adls_account_name": {
+												"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"config_file_container": {
+												"value": "@pipeline().parameters.config_file_container",
+												"type": "Expression"
+											},
+											"config_file_path": {
+												"value": "@pipeline().parameters.config_file_path",
+												"type": "Expression"
+											},
+											"config_files_list": {
+												"value": "@pipeline().parameters.config_files_list",
+												"type": "Expression"
+											},
+											"src_ls_keyvault_name": {
+												"value": "@pipeline().parameters.src_ls_keyvault_name",
+												"type": "Expression"
+											},
+											"src_ls_sql_conn_secret_name": {
+												"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+												"type": "Expression"
+											},
+											"sink_ls_adls_account_name": {
+												"value": "@pipeline().parameters.sink_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"sink_container_name": {
+												"value": "@pipeline().parameters.sink_container_name",
+												"type": "Expression"
+											},
+											"sink_file_path": {
+												"value": "@pipeline().parameters.sink_file_path",
+												"type": "Expression"
+											},
+											"partition_level": {
+												"value": "@pipeline().parameters.partition_level",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						},
+						{
+							"value": "sql_adls_ingestion_watermark_master",
+							"activities": [
+								{
+									"name": "Execute SQL ingestion watermark Master",
+									"description": "This activity will execute the master pipeline- sql_adls_ingestion_watermark_master.",
+									"type": "ExecutePipeline",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"pipeline": {
+											"referenceName": "az_sql_adls_ingestion_watermark_master",
+											"type": "PipelineReference"
+										},
+										"waitOnCompletion": true,
+										"parameters": {
+											"init_watermark": {
+												"value": "@pipeline().parameters.init_watermark",
+												"type": "Expression"
+											},
+											"config_act_ls_adls_account_name": {
+												"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"config_file_container": {
+												"value": "@pipeline().parameters.config_file_container",
+												"type": "Expression"
+											},
+											"config_file_path": {
+												"value": "@pipeline().parameters.config_file_path",
+												"type": "Expression"
+											},
+											"config_files_list": {
+												"value": "@pipeline().parameters.config_files_list",
+												"type": "Expression"
+											},
+											"src_ls_keyvault_name": {
+												"value": "@pipeline().parameters.src_ls_keyvault_name",
+												"type": "Expression"
+											},
+											"src_ls_sql_conn_secret_name": {
+												"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+												"type": "Expression"
+											},
+											"sink_ls_adls_account_name": {
+												"value": "@pipeline().parameters.sink_ls_adls_account_name",
+												"type": "Expression"
+											},
+											"sink_container_name": {
+												"value": "@pipeline().parameters.sink_container_name",
+												"type": "Expression"
+											},
+											"sink_file_path": {
+												"value": "@pipeline().parameters.sink_file_path",
+												"type": "Expression"
+											},
+											"watermark_file_path": {
+												"value": "@pipeline().parameters.watermark_file_path",
+												"type": "Expression"
+											},
+											"watermark_file_prefix": {
+												"value": "@pipeline().parameters.watermark_file_prefix",
+												"type": "Expression"
+											},
+											"partition_level": {
+												"value": "@pipeline().parameters.partition_level",
+												"type": "Expression"
+											},
+											"successful_ingestion_metadata_file_path": {
+												"value": "@pipeline().parameters.successful_ingestion_metadata_file_path",
+												"type": "Expression"
+											}
+										}
+									}
+								}
+							]
+						}
+					],
+					"defaultActivities": [
+						{
+							"name": "Fail Activity",
+							"description": "This Activity is used to purposefully fail the pipeline along with sending the custom error code and error message with it.",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": "Parameter: \"pattern_name\" is undefined or invalid.",
+								"errorCode": "0000"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"pattern_name": {
+				"type": "string"
+			},
+			"src_adls_account_name": {
+				"type": "string"
+			},
+			"src_container": {
+				"type": "string"
+			},
+			"src_file_path": {
+				"type": "string"
+			},
+			"config_act_ls_adls_account_name": {
+				"type": "string"
+			},
+			"config_container": {
+				"type": "string"
+			},
+			"config_file_path": {
+				"type": "string"
+			},
+			"config_files_list": {
+				"type": "string",
+				"defaultValue": ".json"
+			},
+			"sink_adls_account_name": {
+				"type": "string"
+			},
+			"sink_container": {
+				"type": "string"
+			},
+			"sink_file_path": {
+				"type": "string"
+			},
+			"partition_level": {
+				"type": "string"
+			},
+			"src_ls_adls_account_name": {
+				"type": "string"
+			},
+			"src_container_name": {
+				"type": "string"
+			},
+			"sink_ls_adls_account_name": {
+				"type": "string"
+			},
+			"sink_container_name": {
+				"type": "string"
+			},
+			"watermark_file_path": {
+				"type": "string"
+			},
+			"watermark_file_prefix": {
+				"type": "string"
+			},
+			"init_watermark": {
+				"type": "string"
+			},
+			"test_file_path": {
+				"type": "string"
+			},
+			"test_file_name": {
+				"type": "string"
+			},
+			"successful_ingestion_metadata_file_path": {
+				"type": "string"
+			},
+			"config_act_ls_keyvault_name": {
+				"type": "string"
+			},
+			"config_act_ls_adls_secret_name": {
+				"type": "string"
+			},
+			"config_file_container": {
+				"type": "string"
+			},
+			"src_ls_keyvault_name": {
+				"type": "string"
+			},
+			"src_ls_sql_conn_secret_name": {
+				"type": "string"
+			},
+			"sink_ls_keyvault_name": {
+				"type": "string"
+			},
+			"sink_ls_adls_secret_name": {
+				"type": "string"
+			},
+			"sink_file_name": {
+				"type": "string"
+			}
+		},
+		"variables": {
+			"watermark_file_name": {
+				"type": "String"
+			},
+			"start_time": {
+				"type": "String"
+			},
+			"output_file_name": {
+				"type": "String"
+			},
+			"output_file_path": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "orchestration_pipelines"
+		},
+		"annotations": []
+	}
+}

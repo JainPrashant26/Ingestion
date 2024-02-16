@@ -1,0 +1,288 @@
+{
+	"name": "sap_hana_to_adls_bulk_ingestion",
+	"properties": {
+		"activities": [
+			{
+				"name": "lookup_config_file",
+				"description": "This activity will try to lookup into the SAP HANA dataset details.",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_json",
+						"type": "DatasetReference",
+						"parameters": {
+							"ls_adls_account_name": {
+								"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().parameters.config_file_container",
+								"type": "Expression"
+							},
+							"file_path": {
+								"value": "@pipeline().parameters.config_file_path",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@pipeline().parameters.config_file_name",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "for_each_config",
+				"description": "This activity will iterate over the copy activity inside.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "lookup_config_file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('lookup_config_file').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Generate Output file name",
+							"description": "This activity is used for naming output file.",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "output_file_name",
+								"value": {
+									"value": "@concat(item().sink.file_name,'_', item().source.table_name,'_',item().source.query_num,'_',substring(pipeline().TriggerTime,0,4),'-',substring(pipeline().TriggerTime,5,2),'-',substring(pipeline().TriggerTime,8,2),'-',substring(pipeline().TriggerTime,11,2),'-',substring(pipeline().TriggerTime,14,2),'-',substring(pipeline().TriggerTime,17,2),'.parquet')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Generate Output file path",
+							"description": "This activity is to provide output file path.",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "output_file_path",
+								"value": {
+									"value": "@concat(\n\npipeline().parameters.sink_file_path,\n\n'/Year=',substring(pipeline().TriggerTime,0,4),\n\n'/Month=',substring(pipeline().TriggerTime,5,2), \n\nif(or(equals(toLower(pipeline().parameters.partition_level), 'day'), equals(toLower(pipeline().parameters.partition_level), 'week')) ,\nconcat('/Day=', substring(pipeline().TriggerTime,8,2)),''), \n\nif(equals(toLower(pipeline().parameters.partition_level), 'hour'), \nconcat('/Day=', substring(pipeline().TriggerTime,8,2), '/Hour=',substring(pipeline().TriggerTime,11,2)), ''),\n\nif(equals(toLower(pipeline().parameters.partition_level), 'minute'), \nconcat('/Day=', substring(pipeline().TriggerTime,8,2), '/Hour=',substring(pipeline().TriggerTime,11,2), '/Minute=', substring(pipeline().TriggerTime,14,2)), '')\n\n, '/'\n\n)\n",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "copy_sap_hana_to_adls",
+							"description": "This activity copies data from SAP HANA server and writes to azure data lake storage.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Generate Output file name",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Generate Output file path",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SapHanaSource",
+									"additionalColumns": [
+										{
+											"name": "ingest_ts",
+											"value": {
+												"value": "@formatDateTime(utcnow(),'yyyy-MM-dd HH:mm:ss')",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_exec_ts",
+											"value": {
+												"value": "@formatDateTime(pipeline().TriggerTime,'yyyy-MM-dd HH:mm:ss')",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_pipeline_name",
+											"value": {
+												"value": "@pipeline().Pipeline",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_pipeline_run_id",
+											"value": {
+												"value": "ingest_pipeline_run_id",
+												"type": "Expression"
+											}
+										}
+									],
+									"query": {
+										"value": "select @{item().source.select_name_list} from @{concat(item().source.schema_name, '.', item().source.table_name)} \nwhere @{item().source.additional_terms}",
+										"type": "Expression"
+									},
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_sap_hana",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema_name": {
+											"value": "@item().source.schema_name",
+											"type": "Expression"
+										},
+										"table_name": {
+											"value": "@item().source.table_name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_adls_account_name": {
+											"value": "@pipeline().parameters.sink_ls_adls_account_name",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.sink_container_name",
+											"type": "Expression"
+										},
+										"file_path": {
+											"value": "@variables('output_file_path')",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@variables('output_file_name')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"config_act_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"config_file_container": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"config_file_path": {
+				"type": "string",
+				"defaultValue": "l0_config/sap_hana_bulk"
+			},
+			"config_file_name": {
+				"type": "string",
+				"defaultValue": "eshan_customers_config.json"
+			},
+			"sink_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"sink_container_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"sink_file_path": {
+				"type": "string",
+				"defaultValue": "output_folder/sap_hana_bulk_parquet"
+			},
+			"partition_level": {
+				"type": "string",
+				"defaultValue": "day"
+			}
+		},
+		"variables": {
+			"output_file_name": {
+				"type": "String"
+			},
+			"output_file_path": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "sap_hana_source_ingestion"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-08-09T14:26:19Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

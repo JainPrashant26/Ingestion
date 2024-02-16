@@ -1,0 +1,46 @@
+{
+	"name": "tr_scheduled_adls_file_ingestion_cdc",
+	"properties": {
+		"description": "Scheduled trigger for CDC ADLS File Ingestion",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "adls_file_ingestion_watermark",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"src_ls_adls_account_name": "meusdlsdevcptgbatch002",
+					"src_container_name": "raw",
+					"src_file_path": "input_folder/adls_files_source",
+					"sink_ls_adls_account_name": "meusdlsdevcptgbatch002",
+					"sink_container_name": "raw",
+					"sink_file_path": "output_folder/adls_files_parquet",
+					"watermark_file_path": "watermark_folder/adls_files",
+					"watermark_file_prefix": "watermark_",
+					"init_watermark": "1900-01-01T01:00:00Z",
+					"test_file_path": "watermark_folder/adls_files",
+					"test_file_name": "test_file.json"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-03-15T20:21:00Z",
+				"timeZone": "UTC",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						8
+					]
+				}
+			}
+		}
+	}
+}

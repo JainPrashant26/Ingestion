@@ -1,0 +1,9 @@
+{
+	"name": "meus-adf-dev-cptgbatch-003",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "192bb630-0b74-4e49-ae17-5f747725c3e0",
+		"tenantId": "638456b8-8343-4e48-9ebe-4f5cf9a1997d"
+	}
+}

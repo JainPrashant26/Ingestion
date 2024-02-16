@@ -1,0 +1,630 @@
+{
+	"name": "master_orchestration",
+	"properties": {
+		"activities": [
+			{
+				"name": "If Condition for Ingestion",
+				"description": "This activity checks whether to run specific ingestion pattern or not.",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@bool(pipeline().parameters.ingestion)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Execute Ingestion Orchestration",
+							"description": "This activity will execute the pipeline- ingestion_orchestration.",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "ingestion_orchestration",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"pattern_name": {
+										"value": "@pipeline().parameters.pattern_name",
+										"type": "Expression"
+									},
+									"src_adls_account_name": {
+										"value": "@pipeline().parameters.src_adls_account_name",
+										"type": "Expression"
+									},
+									"src_container": {
+										"value": "@pipeline().parameters.src_container",
+										"type": "Expression"
+									},
+									"src_file_path": {
+										"value": "@pipeline().parameters.src_file_path",
+										"type": "Expression"
+									},
+									"config_act_ls_adls_account_name": {
+										"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+										"type": "Expression"
+									},
+									"config_container": {
+										"value": "@pipeline().parameters.config_container",
+										"type": "Expression"
+									},
+									"config_file_path": {
+										"value": "@pipeline().parameters.config_file_path",
+										"type": "Expression"
+									},
+									"config_files_list": {
+										"value": "@pipeline().parameters.config_files_list",
+										"type": "Expression"
+									},
+									"sink_adls_account_name": {
+										"value": "@pipeline().parameters.sink_adls_account_name",
+										"type": "Expression"
+									},
+									"sink_container": {
+										"value": "@pipeline().parameters.sink_container",
+										"type": "Expression"
+									},
+									"sink_file_path": {
+										"value": "@pipeline().parameters.sink_file_path",
+										"type": "Expression"
+									},
+									"partition_level": {
+										"value": "@pipeline().parameters.partition_level",
+										"type": "Expression"
+									},
+									"src_ls_adls_account_name": {
+										"value": "@pipeline().parameters.src_ls_adls_account_name",
+										"type": "Expression"
+									},
+									"src_container_name": {
+										"value": "@pipeline().parameters.src_container_name",
+										"type": "Expression"
+									},
+									"sink_ls_adls_account_name": {
+										"value": "@pipeline().parameters.sink_ls_adls_account_name",
+										"type": "Expression"
+									},
+									"sink_container_name": {
+										"value": "@pipeline().parameters.sink_container_name",
+										"type": "Expression"
+									},
+									"watermark_file_path": {
+										"value": "@pipeline().parameters.watermark_file_path",
+										"type": "Expression"
+									},
+									"watermark_file_prefix": {
+										"value": "@pipeline().parameters.watermark_file_prefix",
+										"type": "Expression"
+									},
+									"init_watermark": {
+										"value": "@pipeline().parameters.init_watermark",
+										"type": "Expression"
+									},
+									"test_file_path": {
+										"value": "@pipeline().parameters.test_file_path",
+										"type": "Expression"
+									},
+									"test_file_name": {
+										"value": "@pipeline().parameters.test_file_name",
+										"type": "Expression"
+									},
+									"successful_ingestion_metadata_file_path": {
+										"value": "@pipeline().parameters.successful_ingestion_metadata_file_path",
+										"type": "Expression"
+									},
+									"config_act_ls_keyvault_name": {
+										"value": "@pipeline().parameters.config_act_ls_keyvault_name",
+										"type": "Expression"
+									},
+									"config_act_ls_adls_secret_name": {
+										"value": "@pipeline().parameters.config_act_ls_adls_secret_name",
+										"type": "Expression"
+									},
+									"config_file_container": {
+										"value": "@pipeline().parameters.config_file_container",
+										"type": "Expression"
+									},
+									"src_ls_keyvault_name": {
+										"value": "@pipeline().parameters.src_ls_keyvault_name",
+										"type": "Expression"
+									},
+									"src_ls_sql_conn_secret_name": {
+										"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+										"type": "Expression"
+									},
+									"sink_ls_keyvault_name": {
+										"value": "@pipeline().parameters.sink_ls_keyvault_name",
+										"type": "Expression"
+									},
+									"sink_ls_adls_secret_name": {
+										"value": "@pipeline().parameters.sink_ls_adls_secret_name",
+										"type": "Expression"
+									},
+									"sink_file_name": {
+										"value": "@pipeline().parameters.sink_file_name",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Execute Curation_l1_l2_l3_l4 Master",
+				"description": "This activity will execute the curation master pipelines -\nl1_l2_curated_master,  l3_curated_master & l4_curated_master.",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "If Condition for Ingestion",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "curation_orchestration",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"curation_l1_l2": {
+							"value": "@pipeline().parameters.curation_l1_l2",
+							"type": "Expression"
+						},
+						"curation_l3": {
+							"value": "@pipeline().parameters.curation_l3",
+							"type": "Expression"
+						},
+						"curation_l4": {
+							"value": "@pipeline().parameters.curation_l4",
+							"type": "Expression"
+						},
+						"databricks_workspace_resource_id": {
+							"value": "@pipeline().parameters.databricks_workspace_resource_id",
+							"type": "Expression"
+						},
+						"databricks_workspace_url": {
+							"value": "@pipeline().parameters.databricks_workspace_url",
+							"type": "Expression"
+						},
+						"databricks_cluster_id": {
+							"value": "@pipeline().parameters.databricks_cluster_id",
+							"type": "Expression"
+						},
+						"notebook_path_l1_l2": {
+							"value": "@pipeline().parameters.notebook_path_l1_l2",
+							"type": "Expression"
+						},
+						"business_unit": {
+							"value": "@pipeline().parameters.business_unit",
+							"type": "Expression"
+						},
+						"site_name": {
+							"value": "@pipeline().parameters.site_name",
+							"type": "Expression"
+						},
+						"site_short_code": {
+							"value": "@pipeline().parameters.site_short_code",
+							"type": "Expression"
+						},
+						"config_file_path": {
+							"value": "@pipeline().parameters.config_file_path",
+							"type": "Expression"
+						},
+						"datetime_input": {
+							"value": "@pipeline().parameters.datetime_input",
+							"type": "Expression"
+						},
+						"additional_path": {
+							"value": "@pipeline().parameters.additional_path",
+							"type": "Expression"
+						},
+						"write_mode": {
+							"value": "@pipeline().parameters.write_mode",
+							"type": "Expression"
+						},
+						"interval": {
+							"value": "@pipeline().parameters.interval",
+							"type": "Expression"
+						},
+						"interval_type": {
+							"value": "@pipeline().parameters.interval_type",
+							"type": "Expression"
+						},
+						"read_partition": {
+							"value": "@pipeline().parameters.read_partition",
+							"type": "Expression"
+						},
+						"external_config_file_path": {
+							"value": "@pipeline().parameters.external_config_file_path",
+							"type": "Expression"
+						},
+						"storage_account_name": {
+							"value": "@pipeline().parameters.storage_account_name",
+							"type": "Expression"
+						},
+						"databricks_secret_scope": {
+							"value": "@pipeline().parameters.databricks_secret_scope",
+							"type": "Expression"
+						},
+						"kv_secret_spn_id": {
+							"value": "@pipeline().parameters.kv_secret_spn_id",
+							"type": "Expression"
+						},
+						"kv_secret_spn_secret": {
+							"value": "@pipeline().parameters.kv_secret_spn_secret",
+							"type": "Expression"
+						},
+						"source_storage_account_name": {
+							"value": "@pipeline().parameters.source_storage_account_name",
+							"type": "Expression"
+						},
+						"source_kv_secret_spn_id": {
+							"value": "@pipeline().parameters.source_kv_secret_spn_id",
+							"type": "Expression"
+						},
+						"source_kv_secret_spn_secret": {
+							"value": "@pipeline().parameters.source_kv_secret_spn_secret",
+							"type": "Expression"
+						},
+						"config_storage_account_name": {
+							"value": "@pipeline().parameters.config_storage_account_name",
+							"type": "Expression"
+						},
+						"config_kv_secret_spn_id": {
+							"value": "@pipeline().parameters.config_kv_secret_spn_id",
+							"type": "Expression"
+						},
+						"config_kv_secret_spn_secret": {
+							"value": "@pipeline().parameters.config_kv_secret_spn_secret",
+							"type": "Expression"
+						},
+						"kv_directory_id": {
+							"value": "@pipeline().parameters.kv_directory_id",
+							"type": "Expression"
+						},
+						"config_files_list_l1_l2": {
+							"value": "@pipeline().parameters.config_files_list_l1_l2",
+							"type": "Expression"
+						},
+						"notebook_path_l3": {
+							"value": "@pipeline().parameters.notebook_path_l3",
+							"type": "Expression"
+						},
+						"config_files_list_l3": {
+							"value": "@pipeline().parameters.config_files_list_l3",
+							"type": "Expression"
+						},
+						"notebook_path_l4": {
+							"value": "@pipeline().parameters.notebook_path_l4",
+							"type": "Expression"
+						},
+						"sql_init_script": {
+							"value": "@pipeline().parameters.sql_init_script",
+							"type": "Expression"
+						},
+						"asql_server_name": {
+							"value": "@pipeline().parameters.asql_server_name",
+							"type": "Expression"
+						},
+						"asql_database_name": {
+							"value": "@pipeline().parameters.asql_database_name",
+							"type": "Expression"
+						},
+						"kv_secret_asql_spn_id": {
+							"value": "@pipeline().parameters.kv_secret_asql_spn_id",
+							"type": "Expression"
+						},
+						"kv_secret_asql_spn_secret": {
+							"value": "@pipeline().parameters.kv_secret_asql_spn_secret",
+							"type": "Expression"
+						},
+						"kv_secret_jdbc_username": {
+							"value": "@pipeline().parameters.kv_secret_jdbc_username",
+							"type": "Expression"
+						},
+						"kv_secret_jdbc_password": {
+							"value": "@pipeline().parameters.kv_secret_jdbc_password",
+							"type": "Expression"
+						},
+						"config_files_list_l4": {
+							"value": "@pipeline().parameters.config_files_list_l4",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"pattern_name": {
+				"type": "string",
+				"defaultValue": "adls_excel_ingestion_master"
+			},
+			"ingestion": {
+				"type": "string",
+				"defaultValue": "True"
+			},
+			"curation_l1_l2": {
+				"type": "string",
+				"defaultValue": "False"
+			},
+			"curation_l3": {
+				"type": "string",
+				"defaultValue": "False"
+			},
+			"curation_l4": {
+				"type": "string",
+				"defaultValue": "False"
+			},
+			"src_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"src_container": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"src_file_path": {
+				"type": "string",
+				"defaultValue": "input_folder/adls_excel_source/sales_details/"
+			},
+			"config_act_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"config_container": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"config_file_path": {
+				"type": "string",
+				"defaultValue": "l0_config/adls_excel"
+			},
+			"config_files_list": {
+				"type": "string",
+				"defaultValue": "config_internetsales_details.json"
+			},
+			"sink_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"sink_container": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"sink_file_path": {
+				"type": "string",
+				"defaultValue": "output_folder/adls_excel_parquet/customer_date_geography/"
+			},
+			"partition_level": {
+				"type": "string",
+				"defaultValue": "day"
+			},
+			"src_ls_adls_account_name": {
+				"type": "string"
+			},
+			"src_container_name": {
+				"type": "string"
+			},
+			"sink_ls_adls_account_name": {
+				"type": "string"
+			},
+			"sink_container_name": {
+				"type": "string"
+			},
+			"watermark_file_path": {
+				"type": "string"
+			},
+			"watermark_file_prefix": {
+				"type": "string"
+			},
+			"init_watermark": {
+				"type": "string"
+			},
+			"test_file_path": {
+				"type": "string"
+			},
+			"test_file_name": {
+				"type": "string"
+			},
+			"successful_ingestion_metadata_file_path": {
+				"type": "string"
+			},
+			"config_act_ls_keyvault_name": {
+				"type": "string"
+			},
+			"config_act_ls_adls_secret_name": {
+				"type": "string"
+			},
+			"config_file_container": {
+				"type": "string"
+			},
+			"src_ls_keyvault_name": {
+				"type": "string"
+			},
+			"src_ls_sql_conn_secret_name": {
+				"type": "string"
+			},
+			"sink_ls_keyvault_name": {
+				"type": "string"
+			},
+			"sink_ls_adls_secret_name": {
+				"type": "string"
+			},
+			"sink_file_name": {
+				"type": "string"
+			},
+			"databricks_workspace_resource_id": {
+				"type": "string",
+				"defaultValue": "/subscriptions/d1b332e2-9211-41db-b6ba-93e862f9dc97/resourceGroups/mnus-rg-dev-cptgbatch-001/providers/Microsoft.Databricks/workspaces/meus-dbrick-dev-cptgbatch-001"
+			},
+			"databricks_workspace_url": {
+				"type": "string",
+				"defaultValue": "https://adb-734739121289310.10.azuredatabricks.net"
+			},
+			"databricks_cluster_id": {
+				"type": "string",
+				"defaultValue": "0403-220129-r3f04xtt"
+			},
+			"notebook_path_l1_l2": {
+				"type": "string",
+				"defaultValue": "/notebooks/Test_l1_l2_curated.py"
+			},
+			"business_unit": {
+				"type": "string",
+				"defaultValue": "cptg"
+			},
+			"site_name": {
+				"type": "string",
+				"defaultValue": "global"
+			},
+			"site_short_code": {
+				"type": "string",
+				"defaultValue": "global"
+			},
+			"datetime_input": {
+				"type": "string",
+				"defaultValue": "2023-10-13T00:00:00"
+			},
+			"additional_path": {
+				"type": "string",
+				"defaultValue": "output_folder/adls_excel_parquet/customer_date_geography "
+			},
+			"write_mode": {
+				"type": "string",
+				"defaultValue": "overwrite"
+			},
+			"interval": {
+				"type": "string",
+				"defaultValue": "1"
+			},
+			"interval_type": {
+				"type": "string",
+				"defaultValue": "day"
+			},
+			"read_partition": {
+				"type": "string",
+				"defaultValue": "Year=2023/Month=09/Day=28"
+			},
+			"external_config_file_path": {
+				"type": "string"
+			},
+			"storage_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"databricks_secret_scope": {
+				"type": "string",
+				"defaultValue": "meus-dbrick-dev-cptg-secret-scope"
+			},
+			"kv_secret_spn_id": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-id"
+			},
+			"kv_secret_spn_secret": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-secret"
+			},
+			"source_storage_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"source_kv_secret_spn_id": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-id"
+			},
+			"source_kv_secret_spn_secret": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-secret"
+			},
+			"config_storage_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"config_kv_secret_spn_id": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-id"
+			},
+			"config_kv_secret_spn_secret": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-secret"
+			},
+			"kv_directory_id": {
+				"type": "string",
+				"defaultValue": "cptg-directory-id"
+			},
+			"config_files_list_l1_l2": {
+				"type": "string",
+				"defaultValue": "/mnt/config/l1_l2_config/l1_l2_customer_internet_sales.json,/mnt/config/l1_l2_config/l1_l2_date_internet_sales.json,/mnt/config/l1_l2_config/l1_l2_geography_internet_sales.json,/mnt/config/l1_l2_config/l1_l2_internet_sales.json"
+			},
+			"notebook_path_l3": {
+				"type": "string",
+				"defaultValue": "/notebooks/Test_l3_curated.py"
+			},
+			"config_files_list_l3": {
+				"type": "string",
+				"defaultValue": "/mnt/config/l3_config/l3_config_date.json,/mnt/config/l3_config/l3_config_internet_sales.json,/mnt/config/l3_config/l3_customer_geography.json"
+			},
+			"notebook_path_l4": {
+				"type": "string",
+				"defaultValue": "/notebooks/Test_l4_curated.py"
+			},
+			"sql_init_script": {
+				"type": "string",
+				"defaultValue": "NA"
+			},
+			"asql_server_name": {
+				"type": "string",
+				"defaultValue": "meusserverdevcptgbatch001"
+			},
+			"asql_database_name": {
+				"type": "string",
+				"defaultValue": "meus-db-dev-cptgbatch-001"
+			},
+			"kv_secret_asql_spn_id": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-id"
+			},
+			"kv_secret_asql_spn_secret": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-secret"
+			},
+			"kv_secret_jdbc_username": {
+				"type": "string",
+				"defaultValue": "jdbc-username"
+			},
+			"kv_secret_jdbc_password": {
+				"type": "string",
+				"defaultValue": "jdbc-password"
+			},
+			"config_files_list_l4": {
+				"type": "string",
+				"defaultValue": "/mnt/config/l4_config/l4_date_dim.json,/mnt/config/l4_config/l4_derived_customer_geography_dim.json,/mnt/config/l4_config/l4_internetSales_fact.json"
+			}
+		},
+		"variables": {
+			"watermark_file_name": {
+				"type": "String"
+			},
+			"start_time": {
+				"type": "String"
+			},
+			"output_file_name": {
+				"type": "String"
+			},
+			"output_file_path": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "orchestration_pipelines"
+		},
+		"annotations": []
+	}
+}

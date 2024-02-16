@@ -1,0 +1,53 @@
+{
+	"name": "tr_scheduled_l4_curated_master",
+	"properties": {
+		"description": "Scheduled trigger for L4 Curation pipeline master.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "l4_curated_master",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"databricks_workspace_resource_id": "/subscriptions/d1b332e2-9211-41db-b6ba-93e862f9dc97/resourceGroups/mnus-rg-dev-cptgbatch-001/providers/Microsoft.Databricks/workspaces/meus-dbrick-dev-cptgbatch-001",
+					"databricks_workspace_url": "https://adb-734739121289310.10.azuredatabricks.net",
+					"databricks_cluster_id": "0403-220129-r3f04xtt",
+					"notebook_path_l4": "/notebooks/l4_curated.py",
+					"config_file_path": "/mnt/config/l4_config/l4_customers_dim.json",
+					"sql_init_script": "NA",
+					"storage_account_name": "meusdlsdevcptgbatch",
+					"databricks_secret_scope": "meus-dbrick-dev-cptg-secret-scope",
+					"asql_server_name": "meusserverdevcptgbatch001",
+					"asql_database_name": "meus-db-dev-cptgbatch-001",
+					"kv_secret_asql_spn_id": "cptg-spn-databricks-client-id",
+					"kv_secret_asql_spn_secret": "cptg-spn-databricks-client-secret",
+					"kv_secret_jdbc_username": "jdbc-username",
+					"kv_secret_jdbc_password": "jdbc-password",
+					"kv_secret_spn_id": "cptg-spn-databricks-client-id",
+					"kv_secret_spn_secret": "cptg-spn-databricks-client-secret",
+					"kv_directory_id": "cptg-directory-id",
+					"config_files_list_l4": "/mnt/config/l4_config/l4_customers_dim.json,/mnt/config/l4_config/l4_customers_fact.json"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-10-15T07:00:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						19
+					]
+				}
+			}
+		}
+	}
+}

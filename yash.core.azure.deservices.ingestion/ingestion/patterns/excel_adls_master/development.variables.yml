@@ -1,0 +1,6 @@
+variables:
+  az-subscription-id: "d1b332e2-9211-41db-b6ba-93e862f9dc97"
+  adf-rg-name: "mnus-rg-dev-cptgbatch-001"
+  adf-name: "meus-adf-dev-cptgbatch-001"
+  SINK-LS-KEYVAULT-NAME: "meus-kv-dev-cptgbatch001"
+  pipeline_name: "adls_excel_ingestion_master"

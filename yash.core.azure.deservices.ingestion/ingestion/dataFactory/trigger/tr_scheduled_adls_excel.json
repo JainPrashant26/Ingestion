@@ -1,0 +1,46 @@
+{
+	"name": "tr_scheduled_adls_excel",
+	"properties": {
+		"description": "Scheduled trigger for ADLS Excel ingestion pipeline.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "adls_excel_ingestion",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"src_adls_account_name": "meusdlsdevcptgbatch002",
+					"src_container": "raw",
+					"src_file_path": "input_folder/adls_excel_source",
+					"config_act_ls_adls_account_name": "meusdlsdevcptgbatch002",
+					"config_container": "config",
+					"config_file_path": "l0_config/adls_excel",
+					"config_file_name": "config_customers_orders_data.json",
+					"sink_adls_account_name": "meusdlsdevcptgbatch002",
+					"sink_container": "raw",
+					"sink_file_path": "output_folder/adls_excel_parquet",
+					"partition_level": "day"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-08-24T00:00:00Z",
+				"timeZone": "UTC",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						7
+					]
+				}
+			}
+		}
+	}
+}

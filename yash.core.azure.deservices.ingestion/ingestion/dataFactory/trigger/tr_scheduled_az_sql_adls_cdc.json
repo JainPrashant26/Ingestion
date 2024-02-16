@@ -1,0 +1,49 @@
+{
+	"name": "tr_scheduled_az_sql_adls_cdc",
+	"properties": {
+		"description": "Scheduled trigger for Azure SQL source ingestion (CDC) pipeline.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "az_sql_adls_ingestion_watermark",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"init_watermark": "GETDATE()-1",
+					"config_act_ls_adls_account_name": "meusdlsdevcptgbatch",
+					"config_file_container": "config",
+					"config_file_path": "l0_config/az_sql_cdc",
+					"config_file_name": "dbo_payments_config.json",
+					"src_ls_keyvault_name": "meus-kv-dev-cptgbatch",
+					"src_ls_sql_conn_secret_name": "azure-sql-db-connection-string-dev",
+					"sink_ls_adls_account_name": "meusdlsdevcptgbatch",
+					"sink_container_name": "raw",
+					"sink_file_path": "output_folder/az_sql_cdc_parquet",
+					"watermark_file_path": "watermark_folder/az_sql_cdc",
+					"watermark_file_prefix": "watermark_",
+					"partition_level": "day",
+					"successful_ingestion_metadata_file_path": "watermark_folder/az_sql_cdc/unprocessed_files"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-03-01T00:00:00Z",
+				"timeZone": "UTC",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						7
+					]
+				}
+			}
+		}
+	}
+}

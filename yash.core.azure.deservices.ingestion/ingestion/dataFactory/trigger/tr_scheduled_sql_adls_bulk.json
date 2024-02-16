@@ -1,0 +1,45 @@
+{
+	"name": "tr_scheduled_sql_adls_bulk",
+	"properties": {
+		"description": "Scheduled trigger for SQL source ingestion (Bulk) pipeline.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "sql_adls_ingestion_bulk",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"config_act_ls_adls_account_name": "meusdlsdevcptgbatch",
+					"config_file_container": "config",
+					"config_file_path": "l0_config/sql_bulk",
+					"config_file_name": "dbo_customers_config.json",
+					"src_ls_keyvault_name": "meus-kv-dev-cptgbatch",
+					"src_ls_sql_conn_secret_name": "azure-sql-db-connection-string-dev",
+					"sink_ls_adls_account_name": "meusdlsdevcptgbatch",
+					"sink_container_name": "raw",
+					"sink_file_path": "output_folder/sql_bulk_parquet",
+					"partition_level": "day"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-03-22T12:33:00Z",
+				"timeZone": "UTC",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						7
+					]
+				}
+			}
+		}
+	}
+}

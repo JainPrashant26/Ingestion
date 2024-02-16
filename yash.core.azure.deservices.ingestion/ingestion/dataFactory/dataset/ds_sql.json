@@ -1,0 +1,31 @@
+{
+	"name": "ds_sql",
+	"properties": {
+		"description": "SQL server dataset",
+		"linkedServiceName": {
+			"referenceName": "ls_sql_server",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"keyvault_name": {
+					"value": "@dataset().ls_keyvault_name",
+					"type": "Expression"
+				},
+				"sql_conn_secret_name": {
+					"value": "@dataset().ls_sql_conn_secret_name",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"ls_keyvault_name": {
+				"type": "string"
+			},
+			"ls_sql_conn_secret_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServerTable",
+		"schema": []
+	}
+}

@@ -1,0 +1,80 @@
+{
+    "tr_scheduled_adls_file_ingestion_cdc": [
+        {
+            "name": "$.name",
+            "value": "tr_scheduled_adls_file_ingestion_cdc"
+        },
+        {
+            "name": "$.properties.description",
+            "value": "Scheduled trigger for CDC ADLS File Ingestion"
+        },
+        {
+            "name": "$.properties.runtimeState",
+            "value": "Stopped"
+        },
+        {
+            "name": "$.properties.pipelines[0].pipelineReference.referenceName",
+            "value": "adls_file_ingestion_watermark"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.src_ls_adls_account_name",
+            "value": "meusdlsdevcptgbatch002"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.src_container_name",
+            "value": "raw"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.src_file_path",
+            "value": "input_folder/adls_files_source"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.sink_ls_adls_account_name",
+            "value": "meusdlsdevcptgbatch002"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.sink_container_name",
+            "value": "raw"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.sink_file_path",
+            "value": "output_folder/adls_files_parquet"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.watermark_file_path",
+            "value": "watermark_folder/adls_files"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.watermark_file_prefix",
+            "value": "watermark_"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.init_watermark",
+            "value": "1900-01-01T01:00:00Z"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.test_file_path",
+            "value": "watermark_folder/adls_files"
+        },
+        {
+            "name": "$.properties.pipelines[0].parameters.test_file_name",
+            "value": "test_file.json"
+        },
+        {
+            "name": "$.properties.typeProperties.recurrence.frequency",
+            "value": "Day"
+        },
+        {
+            "name": "$.properties.typeProperties.recurrence.interval",
+            "value": 1
+        },
+        {
+            "name": "$.properties.typeProperties.recurrence.startTime",
+            "value": "2023-03-15T20:21:00Z"
+        },
+        {
+            "name": "$.properties.typeProperties.recurrence.timeZone",
+            "value": "UTC"
+        }
+    ]
+}

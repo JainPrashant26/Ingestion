@@ -1,0 +1,6 @@
+variables:
+  az-subscription-id: "92a36cd6-9924-4b8a-b666-b30ef0beab16"
+  adf-rg-name: "mnus-rg-dev-cptgbatch-001"
+  adf-name: "meus-adf-dev-cptgbatch-004"
+  SINK-LS-KEYVAULT-NAME: "meus-kv-dev-cptgbatch005"
+  pipeline_name: "az_sql_adls_ingestion_bulk"

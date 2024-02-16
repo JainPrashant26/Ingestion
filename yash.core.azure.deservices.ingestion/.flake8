@@ -1,0 +1,11 @@
+[flake8]
+select = BLK,C,E,F,W
+count=True
+ignore=E121,E123,E126,E24,E704,E124,E201,E202,E203,E225,E128,E226,W601,E265,E731,E127,E501,W191,W503,W504,W605
+exclude=.git,__pycache__,docs/source/conf.py,old,build,dist,conftest.py,setup.py,venv,.venv,.eggs,scripts,resources/*,tests,.ci
+jobs=auto
+show_source=True
+statistics=True
+import-order-style=appnexus
+application-import-names=yash.core.azure.deservices.ingestion
+application-package-names=yash

@@ -1,0 +1,33 @@
+{
+	"name": "tr_scheduled_sap_hana_adls_bulk",
+	"properties": {
+		"description": "Scheduled trigger for SAP HANA source ingestion (Bulk) pipeline.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "sap_hana_to_adls_bulk_ingestion",
+					"type": "PipelineReference"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-09-26T00:00:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						7
+					]
+				}
+			}
+		}
+	}
+}

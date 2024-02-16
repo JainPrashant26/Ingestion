@@ -1,0 +1,9 @@
+{
+	"name": "mneu-adf-dev-cptgetl-001",
+	"location": "eastus2",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "f030eb06-bcab-4f1f-8c1a-3734cb76a3be",
+		"tenantId": "638456b8-8343-4e48-9ebe-4f5cf9a1997d"
+	}
+}

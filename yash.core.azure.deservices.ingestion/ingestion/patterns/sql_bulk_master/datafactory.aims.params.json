@@ -1,0 +1,58 @@
+{
+  "sql_adls_ingestion_bulk_master": [
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.timeout",
+      "value": "0.00:03:00"
+    },
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.retry",
+      "value": 1
+    },
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.retryIntervalInSeconds",
+      "value": 30
+    }
+  ],
+  "tr_scheduled_sql_adls_bulk_master": [
+    {
+      "name": "$.properties.pipelines.parameters.config_act_ls_adls_account_name",
+      "value": "meusdlsdevcptgbatch"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_file_container",
+      "value": "config"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_file_path",
+      "value": "l0_config/sql_bulk"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_files_list",
+      "value": "dbo_customers_config.json,dbo_order_ids_config.json,dbo_orders_config.json,dbo_payments_config.json"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.src_ls_keyvault_name",
+      "value": "meus-kv-dev-cptgbatch"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.src_ls_sql_conn_secret_name",
+      "value": "azure-sql-db-connection-string-dev"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_ls_adls_account_name",
+      "value": "meusdlsdevcptgbatch"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_container_name",
+      "value": "raw"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_file_path",
+      "value": "output_folder/sql_bulk_parquet"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.partition_level",
+      "value": "day"
+    }
+  ]
+}

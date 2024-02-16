@@ -1,0 +1,36 @@
+{
+	"name": "ls_sql_server",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Linked service for SQL server connections.",
+		"parameters": {
+			"keyvault_name": {
+				"type": "string"
+			},
+			"sql_conn_secret_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_az_kv",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"keyvault": {
+							"value": "@linkedService().keyvault_name",
+							"type": "Expression"
+						}
+					}
+				},
+				"secretName": {
+					"value": "@linkedService().sql_conn_secret_name",
+					"type": "Expression"
+				}
+			}
+		}
+	}
+}

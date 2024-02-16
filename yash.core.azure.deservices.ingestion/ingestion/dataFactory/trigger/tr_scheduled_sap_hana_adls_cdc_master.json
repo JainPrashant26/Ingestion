@@ -1,0 +1,53 @@
+{
+	"name": "tr_scheduled_sap_hana_adls_cdc_master",
+	"properties": {
+		"description": "Scheduled trigger for SAP HANA source ingestion (CDC) pipeline master.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "sap_hana_ingestion_watermark_master",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"init_watermark": "ADD_DAYS(CURRENT_DATE, -1)",
+					"config_act_ls_adls_account_name": "meusdlsdevcptgbatch",
+					"config_act_ls_keyvault_name": "meus-kv-dev-cptgbatch",
+					"config_act_ls_adls_secret_name": "NA",
+					"config_file_container": "config",
+					"config_file_path": "l0_config/sap_hana_cdc",
+					"config_files_list": "eshan_customers_config.json",
+					"src_ls_keyvault_name": "meus-kv-dev-cptgbatch",
+					"src_ls_sql_conn_secret_name": "azure-sql-db-connection-string-dev",
+					"sink_ls_adls_account_name": "meusdlsdevcptgbatch",
+					"sink_ls_keyvault_name": "meus-kv-dev-cptgbatch",
+					"sink_ls_adls_secret_name": "NA",
+					"sink_container_name": "raw",
+					"sink_file_path": "output_folder/sap_hana_incremental_load",
+					"watermark_file_path": "cptg/sap_hana_watermark_ingestion/watermark",
+					"watermark_file_prefix": "watermark_",
+					"partition_level": "day",
+					"successful_ingestion_metadata_file_path": "cptg/sap_hana_watermark_ingestion/unprocessed_files"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-10-13T00:00:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						7
+					]
+				}
+			}
+		}
+	}
+}

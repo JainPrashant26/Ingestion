@@ -1,0 +1,135 @@
+{
+	"name": "adls_excel_ingestion_master",
+	"properties": {
+		"activities": [
+			{
+				"name": "for_each_config_file",
+				"description": "This activity iterates over the configuration files.",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@split(pipeline().parameters.config_files_list,',')",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Execute ADLS Excel Ingestion",
+							"description": "This activity will execute the child pipeline-  als_excel_ingestion.",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "adls_excel_ingestion",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"src_adls_account_name": {
+										"value": "@pipeline().parameters.src_adls_account_name",
+										"type": "Expression"
+									},
+									"src_container": {
+										"value": "@pipeline().parameters.src_container",
+										"type": "Expression"
+									},
+									"src_file_path": {
+										"value": "@pipeline().parameters.src_file_path",
+										"type": "Expression"
+									},
+									"config_act_ls_adls_account_name": {
+										"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+										"type": "Expression"
+									},
+									"config_container": {
+										"value": "@pipeline().parameters.config_container",
+										"type": "Expression"
+									},
+									"config_file_path": {
+										"value": "@pipeline().parameters.config_file_path",
+										"type": "Expression"
+									},
+									"config_file_name": {
+										"value": "@item()",
+										"type": "Expression"
+									},
+									"sink_adls_account_name": {
+										"value": "@pipeline().parameters.sink_adls_account_name",
+										"type": "Expression"
+									},
+									"sink_container": {
+										"value": "@pipeline().parameters.sink_container",
+										"type": "Expression"
+									},
+									"sink_file_path": {
+										"value": "@pipeline().parameters.sink_file_path",
+										"type": "Expression"
+									},
+									"partition_level": {
+										"value": "@pipeline().parameters.partition_level",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"src_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"src_container": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"src_file_path": {
+				"type": "string",
+				"defaultValue": "input_folder/adls_excel_source/customers_data"
+			},
+			"config_act_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"config_container": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"config_file_path": {
+				"type": "string",
+				"defaultValue": "l0_config/adls_excel"
+			},
+			"config_files_list": {
+				"type": "string",
+				"defaultValue": "config_customers_orders_data.json,config_payments_id.json,config_orders_id.json"
+			},
+			"sink_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"sink_container": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"sink_file_path": {
+				"type": "string",
+				"defaultValue": "output_folder/adls_excel_parquet"
+			},
+			"partition_level": {
+				"type": "string",
+				"defaultValue": "day"
+			}
+		},
+		"folder": {
+			"name": "adls_excel_ingestion"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-01T12:31:17Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

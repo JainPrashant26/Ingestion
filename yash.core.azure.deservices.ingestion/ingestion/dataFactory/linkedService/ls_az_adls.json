@@ -1,0 +1,17 @@
+{
+	"name": "ls_az_adls",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Parameterized linked service for ADLS.",
+		"parameters": {
+			"adls_account_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "@{concat('https://', linkedService().adls_account_name, '.dfs.core.windows.net')}"
+		}
+	}
+}

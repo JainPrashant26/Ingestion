@@ -1,0 +1,9 @@
+{
+	"name": "managed-airflow-002",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "d6854e9a-1ee7-4e28-8090-ebb4d0871371",
+		"tenantId": "638456b8-8343-4e48-9ebe-4f5cf9a1997d"
+	}
+}

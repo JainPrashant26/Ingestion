@@ -1,0 +1,881 @@
+{
+	"name": "sql_adls_ingestion_watermark",
+	"properties": {
+		"description": "Pipeline that will ingest data from sql source in a CDC manner",
+		"activities": [
+			{
+				"name": "lookup_config_file",
+				"description": "This activity will try to lookup for any config files provided.",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:03:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": false,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_json",
+						"type": "DatasetReference",
+						"parameters": {
+							"ls_adls_account_name": {
+								"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().parameters.config_file_container",
+								"type": "Expression"
+							},
+							"file_path": {
+								"value": "@pipeline().parameters.config_file_path",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@pipeline().parameters.config_file_name",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "for_each_config",
+				"description": "This activity defines a repeating control flow and will iterate over a specified collection and executes specified activities provided in a loop.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "lookup_config_file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('lookup_config_file').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "Retrieve New Watermark",
+							"description": "This activity will try to lookup for new watermark present in the dataset.",
+							"type": "Lookup",
+							"dependsOn": [
+								{
+									"activity": "Old Watermark file exists",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"sqlReaderQuery": {
+										"value": "select MAX(@{item().source.watermark_field}) AS watermark from @{item().source.table_name}",
+										"type": "Expression"
+									},
+									"queryTimeout": {
+										"value": "@{item().source.query_timeout}",
+										"type": "Expression"
+									},
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "ds_sql",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_keyvault_name": {
+											"value": "@pipeline().parameters.src_ls_keyvault_name",
+											"type": "Expression"
+										},
+										"ls_sql_conn_secret_name": {
+											"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "Set where clause variable",
+							"description": "This activity creates a variable \"where_clause\" which compares the old and new watermarks.",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Retrieve New Watermark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "where_clause",
+								"value": {
+									"value": "@concat(item().source.watermark_field, if(activity('Get Old Watermark metadata').output.exists ,' > ', ' >= '), variables('old_watermark'), ' AND ', item().source.watermark_field, ' <= ', '''', activity('Retrieve New Watermark').output.value[0].watermark,'''')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Get Old Watermark metadata",
+							"description": "This activity takes a dataset \"ds_json\" as a input and returns metadata information as output.",
+							"type": "GetMetadata",
+							"dependsOn": [
+								{
+									"activity": "Generate Watermark file name",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Generate Output file name",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								},
+								{
+									"activity": "Generate Output file path",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataset": {
+									"referenceName": "ds_json",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_adls_account_name": {
+											"value": "@pipeline().parameters.sink_ls_adls_account_name",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.sink_container_name",
+											"type": "Expression"
+										},
+										"file_path": {
+											"value": "@pipeline().parameters.watermark_file_path",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@variables('watermark_file_name')",
+											"type": "Expression"
+										}
+									}
+								},
+								"fieldList": [
+									"exists"
+								],
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "JsonReadSettings"
+								}
+							}
+						},
+						{
+							"name": "Old Watermark file exists",
+							"description": "checking if the statement old watermark exists or not.",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Get Old Watermark metadata",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@activity('Get Old Watermark metadata').output.exists",
+									"type": "Expression"
+								},
+								"ifFalseActivities": [
+									{
+										"name": "Set Initial watermark variable",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "Retrieve Initial Watermark",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "old_watermark",
+											"value": {
+												"value": "@if(not(empty(pipeline().parameters.init_watermark)), pipeline().parameters.init_watermark, concat('''',activity('Retrieve Initial Watermark').output.value[0].watermark))",
+												"type": "Expression"
+											}
+										}
+									},
+									{
+										"name": "Retrieve Initial Watermark",
+										"type": "Lookup",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "SqlServerSource",
+												"sqlReaderQuery": {
+													"value": "select MIN(@{item().source.watermark_field}) AS watermark from @{item().source.table_name}",
+													"type": "Expression"
+												},
+												"queryTimeout": {
+													"value": "@{item().source.query_timeout}",
+													"type": "Expression"
+												},
+												"partitionOption": "None"
+											},
+											"dataset": {
+												"referenceName": "ds_sql",
+												"type": "DatasetReference",
+												"parameters": {
+													"ls_keyvault_name": {
+														"value": "@pipeline().parameters.src_ls_keyvault_name",
+														"type": "Expression"
+													},
+													"ls_sql_conn_secret_name": {
+														"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+														"type": "Expression"
+													}
+												}
+											},
+											"firstRowOnly": false
+										}
+									}
+								],
+								"ifTrueActivities": [
+									{
+										"name": "Retrieve Old Watermark",
+										"type": "Lookup",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "7.00:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "JsonSource",
+												"storeSettings": {
+													"type": "AzureBlobFSReadSettings",
+													"recursive": false,
+													"enablePartitionDiscovery": false
+												},
+												"formatSettings": {
+													"type": "JsonReadSettings"
+												}
+											},
+											"dataset": {
+												"referenceName": "ds_json",
+												"type": "DatasetReference",
+												"parameters": {
+													"ls_adls_account_name": {
+														"value": "@pipeline().parameters.sink_ls_adls_account_name",
+														"type": "Expression"
+													},
+													"container": {
+														"value": "@pipeline().parameters.sink_container_name",
+														"type": "Expression"
+													},
+													"file_path": {
+														"value": "@pipeline().parameters.watermark_file_path",
+														"type": "Expression"
+													},
+													"file_name": {
+														"value": "@variables('watermark_file_name')",
+														"type": "Expression"
+													}
+												}
+											},
+											"firstRowOnly": false
+										}
+									},
+									{
+										"name": "Set Old watermark variable",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "Retrieve Old Watermark",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "old_watermark",
+											"value": {
+												"value": "@string(first(json(activity('Retrieve Old Watermark').output.value[0].watermark)).new_watermark)",
+												"type": "Expression"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "copy_sql_to_adls",
+							"description": "This activity copies data from sql server and writes to azure data lake storage.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Set where clause variable",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.00:03:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"additionalColumns": [
+										{
+											"name": "ingest_ts",
+											"value": {
+												"value": "@formatDateTime(utcnow(),'yyyy-MM-dd HH:mm:ss')",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_exec_ts",
+											"value": {
+												"value": "@formatDateTime(pipeline().TriggerTime,'yyyy-MM-dd HH:mm:ss')",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_pipeline_name",
+											"value": {
+												"value": "@pipeline().Pipeline",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_pipeline_run_id",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										}
+									],
+									"sqlReaderQuery": {
+										"value": "select @{item().source.select_name_list} from @{item().source.table_name} \nwhere @{item().source.additional_terms} \nAND @{variables('where_clause')}",
+										"type": "Expression"
+									},
+									"queryTimeout": {
+										"value": "@{item().source.query_timeout}",
+										"type": "Expression"
+									},
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_sql",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_keyvault_name": {
+											"value": "@pipeline().parameters.src_ls_keyvault_name",
+											"type": "Expression"
+										},
+										"ls_sql_conn_secret_name": {
+											"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_adls_account_name": {
+											"value": "@pipeline().parameters.sink_ls_adls_account_name",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.sink_container_name",
+											"type": "Expression"
+										},
+										"file_path": {
+											"value": "@variables('output_file_path')",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@variables('output_file_name')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Generate Watermark file name",
+							"description": "This activity creates a variable \"watermark_file_name\" which is a json file.",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "watermark_file_name",
+								"value": {
+									"value": "@concat(pipeline().parameters.watermark_file_prefix, replace(replace(item().source.table_name, '[', ''), ']', ''),'.json')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Generate Output file name",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "output_file_name",
+								"value": {
+									"value": "@concat(item().sink.file_name,'_',item().source.table_name,'_',item().source.query_num,'_',substring(pipeline().TriggerTime,0,4),'-',substring(pipeline().TriggerTime,5,2),'-',substring(pipeline().TriggerTime,8,2),'-',substring(pipeline().TriggerTime,11,2),'-',substring(pipeline().TriggerTime,14,2),'-',substring(pipeline().TriggerTime,17,2),'.parquet')",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Generate Output file path",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "output_file_path",
+								"value": {
+									"value": "@concat(\n\npipeline().parameters.sink_file_path,\n\n'/Year=',substring(pipeline().TriggerTime,0,4),\n\n'/Month=',substring(pipeline().TriggerTime,5,2), \n\nif(or(equals(toLower(pipeline().parameters.partition_level), 'day'), equals(toLower(pipeline().parameters.partition_level), 'week')) ,\nconcat('/Day=', substring(pipeline().TriggerTime,8,2)),''), \n\nif(equals(toLower(pipeline().parameters.partition_level), 'hour'), \nconcat('/Day=', substring(pipeline().TriggerTime,8,2), '/Hour=',substring(pipeline().TriggerTime,11,2)), ''),\n\nif(equals(toLower(pipeline().parameters.partition_level), 'minute'), \nconcat('/Day=', substring(pipeline().TriggerTime,8,2), '/Hour=',substring(pipeline().TriggerTime,11,2), '/Minute=', substring(pipeline().TriggerTime,14,2)), '')\n\n, '/'\n\n)\n",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Save New Watermark",
+							"description": "This activity copies the latest watermark and writes to azure data lake storage.",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Save Ingested TS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "7.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"additionalColumns": [
+										{
+											"name": "new_watermark",
+											"value": {
+												"value": "@concat('[{',\n'\"job_name\" : \"',pipeline().Pipeline,'\",',\n'\"run_id\" : \"',pipeline().RunId,'\",',\n'\"start_date\" : \"',pipeline().TriggerTime,'\",',\n'\"copy_duration\" : \"',activity('copy_sql_to_adls').output.copyDuration,'\",',\n'\"source_table\" : \"',item().source.table_name,'\",',\n'\"old_watermark\" : \"',variables('old_watermark'),'\",',\n'\"new_watermark\" : \"''',activity('Retrieve New Watermark').output.value[0].watermark,'''\",',\n'\"rows_number\" : \"',activity('copy_sql_to_adls').output.rowsRead,'\",',\n'\"rows_size\" : \"',activity('copy_sql_to_adls').output.dataRead,'\",',\n'\"target_file\" : \"',concat(variables('output_file_path'),'/', variables('output_file_name')),'\",',\n'\"config_file\" : \"',concat(pipeline().parameters.config_file_path,'/', pipeline().parameters.config_file_name),'\"},',\nif(activity('Get Old Watermark metadata').output.exists,\nsubstring(string(take(json(activity('Retrieve Old Watermark').output.value[0].watermark), 4)), 1, sub(length(string(take(json(activity('Retrieve Old Watermark').output.value[0].watermark), 4))), 1)),\n']'\n)\n)",
+												"type": "Expression"
+											}
+										}
+									],
+									"sqlReaderQuery": "select null",
+									"queryTimeout": {
+										"value": "@{item().source.query_timeout}",
+										"type": "Expression"
+									},
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "JsonSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "JsonWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"mappings": [
+										{
+											"source": {
+												"name": "new_watermark"
+											},
+											"sink": {
+												"path": "$['watermark']"
+											}
+										}
+									]
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_sql",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_keyvault_name": {
+											"value": "@pipeline().parameters.src_ls_keyvault_name",
+											"type": "Expression"
+										},
+										"ls_sql_conn_secret_name": {
+											"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_json",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_adls_account_name": {
+											"value": "@pipeline().parameters.sink_ls_adls_account_name",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.sink_container_name",
+											"type": "Expression"
+										},
+										"file_path": {
+											"value": "@pipeline().parameters.watermark_file_path",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@variables('watermark_file_name')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Save Ingested TS",
+							"description": "This activity copies ingested timestamps to unprocessed files location",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "copy_sql_to_adls",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.00:03:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"additionalColumns": [
+										{
+											"name": "ingest_exec_ts",
+											"value": {
+												"value": "@formatDateTime(pipeline().TriggerTime,'yyyy-MM-ddTHH:mm:ss')",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_pipeline_name",
+											"value": {
+												"value": "@pipeline().Pipeline",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_pipeline_run_id",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "raw_file_path",
+											"value": {
+												"value": "@concat(variables('output_file_path'),variables('output_file_name'))",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "status",
+											"value": {
+												"value": "new",
+												"type": "Expression"
+											}
+										}
+									],
+									"sqlReaderQuery": {
+										"value": "select null as cs",
+										"type": "Expression"
+									},
+									"queryTimeout": {
+										"value": "@{item().source.query_timeout}",
+										"type": "Expression"
+									},
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_sql",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_keyvault_name": {
+											"value": "@pipeline().parameters.src_ls_keyvault_name",
+											"type": "Expression"
+										},
+										"ls_sql_conn_secret_name": {
+											"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_adls_account_name": {
+											"value": "@pipeline().parameters.sink_ls_adls_account_name",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.sink_container_name",
+											"type": "Expression"
+										},
+										"file_path": {
+											"value": "@concat(pipeline().parameters.successful_ingestion_metadata_file_path,'/',item().source.query_num,'_', replace(replace(item().source.table_name, '[', ''), ']', ''), '/')",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@variables('output_file_name')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"concurrency": 1,
+		"parameters": {
+			"init_watermark": {
+				"type": "string",
+				"defaultValue": "GETDATE()-280"
+			},
+			"config_act_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"config_file_container": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"config_file_path": {
+				"type": "string",
+				"defaultValue": "l0_config/sql_cdc"
+			},
+			"config_file_name": {
+				"type": "string",
+				"defaultValue": "dbo_payments_config.json"
+			},
+			"src_ls_keyvault_name": {
+				"type": "string",
+				"defaultValue": "meus-kv-dev-cptgbatch"
+			},
+			"src_ls_sql_conn_secret_name": {
+				"type": "string",
+				"defaultValue": "azure-sql-db-connection-string-dev"
+			},
+			"sink_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"sink_container_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"sink_file_path": {
+				"type": "string",
+				"defaultValue": "output_folder/sql_cdc_parquet"
+			},
+			"watermark_file_path": {
+				"type": "string",
+				"defaultValue": "watermark_folder/sql_cdc"
+			},
+			"watermark_file_prefix": {
+				"type": "string",
+				"defaultValue": "watermark_"
+			},
+			"partition_level": {
+				"type": "string",
+				"defaultValue": "day"
+			},
+			"successful_ingestion_metadata_file_path": {
+				"type": "string",
+				"defaultValue": "watermark_folder/sql_cdc/unprocessed_files"
+			}
+		},
+		"variables": {
+			"where_clause": {
+				"type": "String"
+			},
+			"old_watermark": {
+				"type": "String"
+			},
+			"watermark_file_name": {
+				"type": "String"
+			},
+			"output_file_name": {
+				"type": "String"
+			},
+			"output_file_path": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "sql_source_ingestion"
+		},
+		"annotations": [
+			"sql_source",
+			"sql_pipeline"
+		],
+		"lastPublishTime": "2023-08-09T12:45:59Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

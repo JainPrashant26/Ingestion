@@ -1,0 +1,15 @@
+{
+    "linkedServices": [
+        "/linkedService/ls_az_adls.json"
+    ],
+    "datasets": [
+        "/dataset/ds_json.json",
+        "/dataset/ds_binary.json"
+    ],
+    "pipelines": [
+        "/pipeline/adls_file_ingestion_watermark.json"
+    ],
+    "triggers": [
+        "/trigger/tr_scheduled_adls_file_ingestion_cdc.json"
+    ]
+}

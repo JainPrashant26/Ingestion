@@ -1,0 +1,253 @@
+{
+	"name": "adls_excel_ingestion",
+	"properties": {
+		"description": "Ingest multiple sheets from a particular excel file",
+		"activities": [
+			{
+				"name": "for_each_sheet",
+				"description": "This activity will iterates for each excel sheets present in the given excel file.",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "lookup_config_file",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('lookup_config_file').output.value",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy excel sheet to parquet",
+							"description": "This activity will copy the excel sheet in parquet format in ADLS.",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.00:03:00",
+								"retry": 1,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "ExcelSource",
+									"additionalColumns": [
+										{
+											"name": "ingest_ts",
+											"value": {
+												"value": "@formatDateTime(utcnow(),'yyyy-MM-dd HH:mm:ss')",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_exec_ts",
+											"value": {
+												"value": "@formatDateTime(pipeline().TriggerTime,'yyyy-MM-dd HH:mm:ss')",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_pipeline_name",
+											"value": {
+												"value": "@pipeline().Pipeline",
+												"type": "Expression"
+											}
+										},
+										{
+											"name": "ingest_pipeline_run_id",
+											"value": {
+												"value": "@pipeline().RunId",
+												"type": "Expression"
+											}
+										}
+									],
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": true,
+										"enablePartitionDiscovery": false
+									}
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"copyBehavior": "PreserveHierarchy"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"value": "@item()",
+									"type": "Expression"
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "ds_az_adls_excel",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_adls_account_name": {
+											"value": "@pipeline().parameters.src_adls_account_name",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.src_container",
+											"type": "Expression"
+										},
+										"file_path": {
+											"value": "@pipeline().parameters.src_file_path",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@item().excel_file_name",
+											"type": "Expression"
+										},
+										"sheet_index": {
+											"value": "@item().src_sheet_index",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "ds_parquet",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_adls_account_name": {
+											"value": "@pipeline().parameters.sink_adls_account_name",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.sink_container",
+											"type": "Expression"
+										},
+										"file_path": {
+											"value": "@concat(\n\npipeline().parameters.sink_file_path,\n\n'/Year=',substring(pipeline().TriggerTime,0,4),\n\n'/Month=',substring(pipeline().TriggerTime,5,2), \n\nif(or(equals(toLower(pipeline().parameters.partition_level), 'day'), equals(toLower(pipeline().parameters.partition_level), 'week')) ,\nconcat('/Day=', substring(pipeline().TriggerTime,8,2)),''), \n\nif(equals(toLower(pipeline().parameters.partition_level), 'hour'), \nconcat('/Day=', substring(pipeline().TriggerTime,8,2), '/Hour=',substring(pipeline().TriggerTime,11,2)), ''),\n\nif(equals(toLower(pipeline().parameters.partition_level), 'minute'), \nconcat('/Day=', substring(pipeline().TriggerTime,8,2), '/Hour=',substring(pipeline().TriggerTime,11,2), '/Minute=', substring(pipeline().TriggerTime,14,2)), '')\n\n, '/'\n\n)",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@concat(split(item().excel_file_name,'.')[0], '_', split(item().excel_file_name,'.')[1], '_sheet_',item().src_sheet_index,'.parquet')",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						}
+					]
+				}
+			},
+			{
+				"name": "lookup_config_file",
+				"description": "This activity will try to lookup for configurations provided for the sheets in a single excel file.",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:03:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"dataset": {
+						"referenceName": "ds_json",
+						"type": "DatasetReference",
+						"parameters": {
+							"ls_adls_account_name": {
+								"value": "@pipeline().parameters.src_adls_account_name",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().parameters.config_container",
+								"type": "Expression"
+							},
+							"file_path": {
+								"value": "@pipeline().parameters.config_file_path",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@pipeline().parameters.config_file_name",
+								"type": "Expression"
+							}
+						}
+					},
+					"firstRowOnly": false
+				}
+			}
+		],
+		"parameters": {
+			"src_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"src_container": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"src_file_path": {
+				"type": "string",
+				"defaultValue": "input_folder/adls_excel_source/customers_data"
+			},
+			"config_act_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"config_container": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"config_file_path": {
+				"type": "string",
+				"defaultValue": "l0_config/adls_excel"
+			},
+			"config_file_name": {
+				"type": "string",
+				"defaultValue": "config_customers_orders_data.json"
+			},
+			"sink_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"sink_container": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"sink_file_path": {
+				"type": "string",
+				"defaultValue": "output_folder/adls_excel_parquet"
+			},
+			"partition_level": {
+				"type": "string",
+				"defaultValue": "day"
+			}
+		},
+		"folder": {
+			"name": "adls_excel_ingestion"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-09-01T12:31:17Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

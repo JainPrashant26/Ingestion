@@ -1,0 +1,176 @@
+{
+	"name": "l4_curated",
+	"properties": {
+		"description": "Parameterized pipeline for executing Databricks notebooks",
+		"activities": [
+			{
+				"name": "execute_l4_curation_notebook",
+				"description": "This activity executes Databricks notebook that reads data from L3 and loads it into curation layer L4",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:15:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": {
+						"value": "@pipeline().parameters.notebook_path_l4",
+						"type": "Expression"
+					},
+					"baseParameters": {
+						"config_file": {
+							"value": "@pipeline().parameters.config_file_path",
+							"type": "Expression"
+						},
+						"sql_init_script": {
+							"value": "@pipeline().parameters.sql_init_script",
+							"type": "Expression"
+						},
+						"storage_account_name": {
+							"value": "@pipeline().parameters.storage_account_name",
+							"type": "Expression"
+						},
+						"databricks_secret_scope": {
+							"value": "@pipeline().parameters.databricks_secret_scope",
+							"type": "Expression"
+						},
+						"asql_server_name": {
+							"value": "@pipeline().parameters.asql_server_name",
+							"type": "Expression"
+						},
+						"asql_database_name": {
+							"value": "@pipeline().parameters.asql_database_name",
+							"type": "Expression"
+						},
+						"kv_secret_asql_spn_id": {
+							"value": "@pipeline().parameters.kv_secret_asql_spn_id",
+							"type": "Expression"
+						},
+						"kv_secret_asql_spn_secret": {
+							"value": "@pipeline().parameters.kv_secret_asql_spn_secret",
+							"type": "Expression"
+						},
+						"kv_secret_jdbc_username": {
+							"value": "@pipeline().parameters.kv_secret_jdbc_username",
+							"type": "Expression"
+						},
+						"kv_secret_jdbc_password": {
+							"value": "@pipeline().parameters.kv_secret_jdbc_password",
+							"type": "Expression"
+						},
+						"kv_secret_spn_id": {
+							"value": "@pipeline().parameters.kv_secret_spn_id",
+							"type": "Expression"
+						},
+						"kv_secret_spn_secret": {
+							"value": "@pipeline().parameters.kv_secret_spn_secret",
+							"type": "Expression"
+						},
+						"kv_directory_id": {
+							"value": "@pipeline().parameters.kv_directory_id",
+							"type": "Expression"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "ls_az_databricks",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"databricks_cluster_id": {
+							"value": "@pipeline().parameters.databricks_cluster_id",
+							"type": "Expression"
+						},
+						"databricks_workspace_url": {
+							"value": "@pipeline().parameters.databricks_workspace_url",
+							"type": "Expression"
+						},
+						"databricks_workspace_resource_id": {
+							"value": "@pipeline().parameters.databricks_workspace_resource_id",
+							"type": "Expression"
+						}
+					}
+				}
+			}
+		],
+		"parameters": {
+			"databricks_workspace_resource_id": {
+				"type": "string",
+				"defaultValue": "/subscriptions/d1b332e2-9211-41db-b6ba-93e862f9dc97/resourceGroups/mnus-rg-dev-cptgbatch-001/providers/Microsoft.Databricks/workspaces/meus-dbrick-dev-cptgbatch-001"
+			},
+			"databricks_workspace_url": {
+				"type": "string",
+				"defaultValue": "https://adb-734739121289310.10.azuredatabricks.net"
+			},
+			"databricks_cluster_id": {
+				"type": "string",
+				"defaultValue": "0403-220129-r3f04xtt"
+			},
+			"notebook_path_l4": {
+				"type": "string",
+				"defaultValue": "/notebooks/Test_l4_curated.py"
+			},
+			"config_file_path": {
+				"type": "string",
+				"defaultValue": "/mnt/config/l4_config/l4_date_dim.json"
+			},
+			"sql_init_script": {
+				"type": "string",
+				"defaultValue": "NA"
+			},
+			"storage_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"databricks_secret_scope": {
+				"type": "string",
+				"defaultValue": "meus-dbrick-dev-cptg-secret-scope"
+			},
+			"asql_server_name": {
+				"type": "string",
+				"defaultValue": "meusserverdevcptgbatch001"
+			},
+			"asql_database_name": {
+				"type": "string",
+				"defaultValue": "meus-db-dev-cptgbatch-001"
+			},
+			"kv_secret_asql_spn_id": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-id"
+			},
+			"kv_secret_asql_spn_secret": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-secret"
+			},
+			"kv_secret_jdbc_username": {
+				"type": "string",
+				"defaultValue": "jdbc-username"
+			},
+			"kv_secret_jdbc_password": {
+				"type": "string",
+				"defaultValue": "jdbc-password"
+			},
+			"kv_secret_spn_id": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-id"
+			},
+			"kv_secret_spn_secret": {
+				"type": "string",
+				"defaultValue": "cptg-spn-databricks-client-secret"
+			},
+			"kv_directory_id": {
+				"type": "string",
+				"defaultValue": "cptg-directory-id"
+			}
+		},
+		"folder": {
+			"name": "l3_l4_curated"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-07-26T07:41:37Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

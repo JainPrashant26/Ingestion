@@ -1,0 +1,82 @@
+[
+{
+	"type": "Mappings",
+	"excel_file_name":"customers_data.xlsx",
+	"src_sheet_index":"0",
+	"mappings":
+		[
+            {
+                "source": {
+                    "name": "first_name",
+                    "type": "String",
+                    "physicalType": "String"
+                },
+                "sink": {
+                    "name": "first_name",
+                    "type": "String",
+                    "physicalType": "String"
+                }
+            },
+            {
+                "source": {
+                    "name": "last_name",
+                    "type": "String",
+                    "physicalType": "String"
+                },
+                "sink": {
+                    "name": "last_name",
+                    "type": "String",
+                    "physicalType": "String"
+                }
+            },
+			{
+                "source": {
+					"name": "ingest_ts",
+					"type": "String",
+					"physicalType": "String"
+				},
+                "sink": {
+					"name": "ingest_ts",
+					"type": "String",
+					"physicalType": "String"
+				}
+			},
+			{
+                "source": {
+                    "name": "ingest_exec_ts",
+                    "type": "String",
+                    "physicalType": "String"
+                },
+                "sink": {
+                    "name": "ingest_exec_ts",
+                    "type": "String",
+                    "physicalType": "String"
+                }
+            },
+			{
+                "source": {
+                    "name": "ingest_pipeline_name",
+                    "type": "String",
+                    "physicalType": "String"
+                },
+                "sink": {
+                    "name": "ingest_pipeline_name",
+                    "type": "String",
+                    "physicalType": "String"
+                }
+            },
+			{
+                "source": {
+                    "name": "ingest_pipeline_run_id",
+                    "type": "String",
+                    "physicalType": "String"
+                },
+                "sink": {
+                    "name": "ingest_pipeline_run_id",
+                    "type": "String",
+                    "physicalType": "String"
+                }
+            }
+        ]
+}
+]

@@ -1,0 +1,158 @@
+{
+	"name": "az_sql_adls_ingestion_watermark_master",
+	"properties": {
+		"activities": [
+			{
+				"name": "for_each_config_definition_file",
+				"description": "For each activity to iterate over each configuration definition file.",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@split(pipeline().parameters.config_files_list,',')",
+						"type": "Expression"
+					},
+					"isSequential": false,
+					"activities": [
+						{
+							"name": "Execute Azure SQL ingestion watermark",
+							"type": "ExecutePipeline",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"pipeline": {
+									"referenceName": "az_sql_adls_ingestion_watermark",
+									"type": "PipelineReference"
+								},
+								"waitOnCompletion": true,
+								"parameters": {
+									"init_watermark": {
+										"value": "@pipeline().parameters.init_watermark",
+										"type": "Expression"
+									},
+									"config_act_ls_adls_account_name": {
+										"value": "@pipeline().parameters.config_act_ls_adls_account_name",
+										"type": "Expression"
+									},
+									"config_file_container": {
+										"value": "@pipeline().parameters.config_file_container",
+										"type": "Expression"
+									},
+									"config_file_path": {
+										"value": "@pipeline().parameters.config_file_path",
+										"type": "Expression"
+									},
+									"config_file_name": {
+										"value": "@item()",
+										"type": "Expression"
+									},
+									"src_ls_keyvault_name": {
+										"value": "@pipeline().parameters.src_ls_keyvault_name",
+										"type": "Expression"
+									},
+									"src_ls_sql_conn_secret_name": {
+										"value": "@pipeline().parameters.src_ls_sql_conn_secret_name",
+										"type": "Expression"
+									},
+									"sink_ls_adls_account_name": {
+										"value": "@pipeline().parameters.sink_ls_adls_account_name",
+										"type": "Expression"
+									},
+									"sink_container_name": {
+										"value": "@pipeline().parameters.sink_container_name",
+										"type": "Expression"
+									},
+									"sink_file_path": {
+										"value": "@pipeline().parameters.sink_file_path",
+										"type": "Expression"
+									},
+									"watermark_file_path": {
+										"value": "@pipeline().parameters.watermark_file_path",
+										"type": "Expression"
+									},
+									"watermark_file_prefix": {
+										"value": "@pipeline().parameters.watermark_file_prefix",
+										"type": "Expression"
+									},
+									"partition_level": {
+										"value": "@pipeline().parameters.partition_level",
+										"type": "Expression"
+									},
+									"successful_ingestion_metadata_file_path": {
+										"value": "@pipeline().parameters.successful_ingestion_metadata_file_path",
+										"type": "Expression"
+									}
+								}
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"init_watermark": {
+				"type": "string",
+				"defaultValue": "GETDATE()-280"
+			},
+			"config_act_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"config_file_container": {
+				"type": "string",
+				"defaultValue": "config"
+			},
+			"config_file_path": {
+				"type": "string",
+				"defaultValue": "l0_config/az_sql_cdc"
+			},
+			"config_files_list": {
+				"type": "string",
+				"defaultValue": "dbo_ins_customer_date_geography_tables_sql_config.json"
+			},
+			"src_ls_keyvault_name": {
+				"type": "string",
+				"defaultValue": "meus-kv-dev-cptgbatch"
+			},
+			"src_ls_sql_conn_secret_name": {
+				"type": "string",
+				"defaultValue": "azure-sql-db-connection-string-dev"
+			},
+			"sink_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"sink_container_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"sink_file_path": {
+				"type": "string",
+				"defaultValue": "output_folder/az_sql_cdc_parquet/internetsales"
+			},
+			"watermark_file_path": {
+				"type": "string",
+				"defaultValue": "watermark_folder/az_sql_cdc/watermark_internetsales"
+			},
+			"watermark_file_prefix": {
+				"type": "string",
+				"defaultValue": "watermark_"
+			},
+			"partition_level": {
+				"type": "string",
+				"defaultValue": "day"
+			},
+			"successful_ingestion_metadata_file_path": {
+				"type": "string",
+				"defaultValue": "watermark_folder/az_sql_cdc/unprocessed_files"
+			}
+		},
+		"folder": {
+			"name": "az_sql_source_ingestion"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-07-26T07:41:38Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

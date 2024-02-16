@@ -1,0 +1,13 @@
+{
+      "src_adls_account_name": "meusdlsdevcptgbatch",
+      "src_container": "raw",
+      "src_file_path": "input_folder/adls_excel_source/sales_details/",
+      "config_act_ls_adls_account_name": "meusdlsdevcptgbatch",
+      "config_container": "config",
+      "config_file_path": "l0_config/adls_excel",
+      "config_file_name": "config_internetsales_details.json",
+      "sink_adls_account_name": "meusdlsdevcptgbatch",
+      "sink_container": "raw",
+      "sink_file_path": "output_folder/adls_excel_parquet/customer_date_geography/",
+      "partition_level": "day"
+}

@@ -1,0 +1,51 @@
+{
+	"name": "ds_json",
+	"properties": {
+		"description": "Data set to represent json files.",
+		"linkedServiceName": {
+			"referenceName": "ls_az_adls",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"adls_account_name": {
+					"value": "@dataset().ls_adls_account_name",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"ls_adls_account_name": {
+				"type": "string"
+			},
+			"container": {
+				"type": "string"
+			},
+			"file_path": {
+				"type": "string"
+			},
+			"file_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().file_name",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().file_path",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().container",
+					"type": "Expression"
+				}
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

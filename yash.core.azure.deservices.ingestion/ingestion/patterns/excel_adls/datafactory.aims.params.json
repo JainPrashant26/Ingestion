@@ -1,0 +1,62 @@
+{
+  "adls_excel_ingestion": [
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.timeout",
+      "value": "0.00:03:00"
+    },
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.retry",
+      "value": 1
+    },
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.retryIntervalInSeconds",
+      "value": 30
+    }
+  ],
+  "tr_scheduled_adls_excel": [
+    {
+      "name": "$.properties.pipelines.parameters.src_adls_account_name",
+      "value": "meusdlsdevcptgbatch002"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.src_container",
+      "value": "raw"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.src_file_path",
+      "value": "input_folder/adls_excel_source"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_act_ls_adls_account_name",
+      "value": "meusdlsdevcptgbatch002"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_container",
+      "value": "config"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_file_path",
+      "value": "l0_config/adls_excel"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_file_name",
+      "value": "config_customers_orders_data.json"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_adls_account_name",
+      "value": "meusdlsdevcptgbatch002"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_container",
+      "value": "raw"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_file_path",
+      "value": "output_folder/adls_excel_parquet"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.partition_level",
+      "value": "day"
+    }
+  ]
+}

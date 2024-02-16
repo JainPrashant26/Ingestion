@@ -1,0 +1,468 @@
+{
+	"name": "adls_file_ingestion_watermark",
+	"properties": {
+		"description": "Copy new and changed files only by using LastModifiedDate",
+		"activities": [
+			{
+				"name": "Get Old Watermark metadata",
+				"description": "Gets the old watermark data",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "Generate Watermark file name",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_json",
+						"type": "DatasetReference",
+						"parameters": {
+							"ls_adls_account_name": {
+								"value": "@pipeline().parameters.sink_ls_adls_account_name",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().parameters.sink_container_name",
+								"type": "Expression"
+							},
+							"file_path": {
+								"value": "@pipeline().parameters.watermark_file_path",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@variables('watermark_file_name')",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"exists"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "JsonReadSettings"
+					}
+				}
+			},
+			{
+				"name": "Generate Watermark file name",
+				"description": "Generates the watermark file name",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "watermark_file_name",
+					"value": {
+						"value": "@concat(pipeline().parameters.watermark_file_prefix, 'cdc_file_storage','.json')",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Old Watermark file exists",
+				"description": "Checks if old watermark file exists or not.",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get Old Watermark metadata",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@activity('Get Old Watermark metadata').output.exists",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Set Initial watermark variable",
+							"description": "Set the initial watermark value",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "start_time",
+								"value": {
+									"value": "@pipeline().parameters.init_watermark",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Retrieve Old Watermark",
+							"description": "Retrieve the old watermark value",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "JsonSource",
+									"storeSettings": {
+										"type": "AzureBlobFSReadSettings",
+										"recursive": false,
+										"enablePartitionDiscovery": false
+									},
+									"formatSettings": {
+										"type": "JsonReadSettings"
+									}
+								},
+								"dataset": {
+									"referenceName": "ds_json",
+									"type": "DatasetReference",
+									"parameters": {
+										"ls_adls_account_name": {
+											"value": "@pipeline().parameters.sink_ls_adls_account_name",
+											"type": "Expression"
+										},
+										"container": {
+											"value": "@pipeline().parameters.sink_container_name",
+											"type": "Expression"
+										},
+										"file_path": {
+											"value": "@pipeline().parameters.watermark_file_path",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@variables('watermark_file_name')",
+											"type": "Expression"
+										}
+									}
+								},
+								"firstRowOnly": false
+							}
+						},
+						{
+							"name": "Set Old watermark variable",
+							"description": "Set the watermark value",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Retrieve Old Watermark",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "start_time",
+								"value": {
+									"value": "@string(first(json(activity('Retrieve Old Watermark').output.value[0].new_watermark)).new_watermark)",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "Copy New Files",
+				"description": "Copy new and changed files only by using LastModifiedDate",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Old Watermark file exists",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:03:00",
+					"retry": 1,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "BinarySource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"modifiedDatetimeStart": {
+								"value": "@variables('start_time')",
+								"type": "Expression"
+							},
+							"modifiedDatetimeEnd": {
+								"value": "@pipeline().TriggerTime",
+								"type": "Expression"
+							},
+							"wildcardFileName": {
+								"value": "*",
+								"type": "Expression"
+							},
+							"deleteFilesAfterCompletion": false
+						},
+						"formatSettings": {
+							"type": "BinaryReadSettings"
+						}
+					},
+					"sink": {
+						"type": "BinarySink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_binary",
+						"type": "DatasetReference",
+						"parameters": {
+							"adls_account_name": {
+								"value": "@pipeline().parameters.src_ls_adls_account_name",
+								"type": "Expression"
+							},
+							"container_name": {
+								"value": "@pipeline().parameters.src_container_name",
+								"type": "Expression"
+							},
+							"file_path": {
+								"value": "@pipeline().parameters.src_file_path",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_binary",
+						"type": "DatasetReference",
+						"parameters": {
+							"adls_account_name": {
+								"value": "@pipeline().parameters.sink_ls_adls_account_name",
+								"type": "Expression"
+							},
+							"container_name": {
+								"value": "@pipeline().parameters.sink_container_name",
+								"type": "Expression"
+							},
+							"file_path": {
+								"value": "@pipeline().parameters.sink_file_path",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			},
+			{
+				"name": "Save New Watermark",
+				"description": "Save the new watermark in json file",
+				"type": "Copy",
+				"dependsOn": [
+					{
+						"activity": "Copy New Files",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "JsonSource",
+						"additionalColumns": [
+							{
+								"name": "new_watermark",
+								"value": {
+									"value": "@concat('[{',\n'\"job_name\" : \"',pipeline().Pipeline,'\",',\n'\"run_id\" : \"',pipeline().RunId,'\",',\n'\"copy_duration\" : \"',activity('Copy New Files').output.copyDuration,'\",',\n'\"old_watermark\" : \"',variables('start_time'),'\",',\n'\"new_watermark\" : \"',pipeline().TriggerTime,'\",',\n'\"rows_number\" : \"',activity('Copy New Files').output.filesRead,'\",',\n'\"rows_size\" : \"',activity('Copy New Files').output.dataRead,'\"',\n'}]'\n)",
+									"type": "Expression"
+								}
+							}
+						],
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "JsonReadSettings"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"path": "$['new_watermark']"
+								},
+								"sink": {
+									"path": "$['new_watermark']"
+								}
+							}
+						]
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_json",
+						"type": "DatasetReference",
+						"parameters": {
+							"ls_adls_account_name": {
+								"value": "@pipeline().parameters.sink_ls_adls_account_name",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().parameters.sink_container_name",
+								"type": "Expression"
+							},
+							"file_path": {
+								"value": "@pipeline().parameters.test_file_path",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@pipeline().parameters.test_file_name",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_json",
+						"type": "DatasetReference",
+						"parameters": {
+							"ls_adls_account_name": {
+								"value": "@pipeline().parameters.sink_ls_adls_account_name",
+								"type": "Expression"
+							},
+							"container": {
+								"value": "@pipeline().parameters.sink_container_name",
+								"type": "Expression"
+							},
+							"file_path": {
+								"value": "@pipeline().parameters.watermark_file_path",
+								"type": "Expression"
+							},
+							"file_name": {
+								"value": "@variables('watermark_file_name')",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"src_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"src_container_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"src_file_path": {
+				"type": "string",
+				"defaultValue": "input_folder/adls_files_source"
+			},
+			"sink_ls_adls_account_name": {
+				"type": "string",
+				"defaultValue": "meusdlsdevcptgbatch"
+			},
+			"sink_container_name": {
+				"type": "string",
+				"defaultValue": "raw"
+			},
+			"sink_file_path": {
+				"type": "string",
+				"defaultValue": "output_folder/adls_files_parquet"
+			},
+			"watermark_file_path": {
+				"type": "string",
+				"defaultValue": "watermark_folder/adls_files"
+			},
+			"watermark_file_prefix": {
+				"type": "string",
+				"defaultValue": "watermark_"
+			},
+			"init_watermark": {
+				"type": "string",
+				"defaultValue": "1900-01-01T01:00:00Z"
+			},
+			"test_file_path": {
+				"type": "string",
+				"defaultValue": "watermark_folder/adls_files"
+			},
+			"test_file_name": {
+				"type": "string",
+				"defaultValue": "test_file.json"
+			}
+		},
+		"variables": {
+			"watermark_file_name": {
+				"type": "String"
+			},
+			"start_time": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "adls_file_ingestion"
+		},
+		"annotations": [
+			"adls_binary_source"
+		],
+		"lastPublishTime": "2023-09-01T12:31:16Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

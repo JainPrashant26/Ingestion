@@ -1,0 +1,26 @@
+{
+	"name": "ls_az_databricks",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"description": "Parameterized linked service for Databricks.",
+		"parameters": {
+			"databricks_cluster_id": {
+				"type": "string"
+			},
+			"databricks_workspace_url": {
+				"type": "string"
+			},
+			"databricks_workspace_resource_id": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureDatabricks",
+		"typeProperties": {
+			"domain": "@linkedService().databricks_workspace_url",
+			"authentication": "MSI",
+			"workspaceResourceId": "@linkedService().databricks_workspace_resource_id",
+			"existingClusterId": "@linkedService().databricks_cluster_id"
+		}
+	}
+}

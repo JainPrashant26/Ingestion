@@ -1,0 +1,61 @@
+{
+	"name": "tr_scheduled_l1_l2_curated",
+	"properties": {
+		"description": "Scheduled trigger for L1 L2 Curation pipeline.",
+		"annotations": [],
+		"runtimeState": "Stopped",
+		"pipelines": [
+			{
+				"pipelineReference": {
+					"referenceName": "l1_l2_curated",
+					"type": "PipelineReference"
+				},
+				"parameters": {
+					"databricks_workspace_resource_id": "/subscriptions/d1b332e2-9211-41db-b6ba-93e862f9dc97/resourceGroups/mnus-rg-dev-cptgbatch-001/providers/Microsoft.Databricks/workspaces/meus-dbrick-dev-cptgbatch-001",
+					"databricks_workspace_url": "https://adb-734739121289310.10.azuredatabricks.net",
+					"databricks_cluster_id": "0403-220129-r3f04xtt",
+					"notebook_path_l1_l2": "/notebooks/l1_l2_curated.py",
+					"business_unit": "cptg",
+					"site_name": "global",
+					"site_short_code": "global",
+					"config_file_path": "mnt/config/l1_l2_config/l1_l2_customers_data.json",
+					"datetime_input": "@trigger().startTime",
+					"additional_path": "az_sql/full",
+					"write_mode": "overwrite",
+					"interval": "1",
+					"interval_type": "day",
+					"read_partition": "Year=%Y/Month=%m/Day=%d",
+					"external_config_file_path": " ",
+					"storage_account_name": "meusdlsdevcptgbatch",
+					"databricks_secret_scope": "meus-dbrick-dev-cptg-secret-scope",
+					"kv_secret_spn_id": "cptg-spn-databricks-client-id",
+					"kv_secret_spn_secret": "cptg-spn-databricks-client-secret",
+					"source_storage_account_name": "meusdlsdevcptgbatch",
+					"source_kv_secret_spn_id": "cptg-spn-databricks-client-id",
+					"source_kv_secret_spn_secret": "cptg-spn-databricks-client-secret",
+					"config_storage_account_name": "meusdlsdevcptgbatch",
+					"config_kv_secret_spn_id": "cptg-spn-databricks-client-id",
+					"config_kv_secret_spn_secret": "cptg-spn-databricks-client-secret",
+					"kv_directory_id": "cptg-directory-id"
+				}
+			}
+		],
+		"type": "ScheduleTrigger",
+		"typeProperties": {
+			"recurrence": {
+				"frequency": "Day",
+				"interval": 1,
+				"startTime": "2023-10-12T07:00:00",
+				"timeZone": "India Standard Time",
+				"schedule": {
+					"minutes": [
+						0
+					],
+					"hours": [
+						15
+					]
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,15 @@
+[
+ {
+ "source": {
+ "query_num": "q1",
+ "select_name_list": "OrderID, OrderPlacedDate, OrderPlacedTime, OrderDesc, OrderStatus",
+ "watermark_field": "OrderPlacedDate",
+ "table_name": "dbo.order_ids",
+ "additional_terms": "1=1",
+ "query_timeout": "2"
+ },
+ "sink": {
+	 "file_name": "order_ids"
+ }
+ }
+]

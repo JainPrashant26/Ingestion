@@ -1,0 +1,74 @@
+{
+  "az_sql_adls_ingestion_watermark_master": [
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.timeout",
+      "value": "0.00:03:00"
+    },
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.retry",
+      "value": 1
+    },
+    {
+      "name": "$.properties.activities[0].typeProperties.activities[0].policy.retryIntervalInSeconds",
+      "value": 30
+    }
+  ],
+  "tr_scheduled_az_sql_adls_cdc_master": [
+    {
+      "name": "$.properties.pipelines.parameters.init_watermark",
+      "value": "GETDATE()-1"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_act_ls_adls_account_name",
+      "value": "meusdlsdevcptgbatch"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_file_container",
+      "value": "config"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_file_path",
+      "value": "l0_config/az_sql_cdc"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.config_files_list",
+      "value": "dbo_orders_config.json,dbo_order_ids_config.json,dbo_payments_config.json"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.src_ls_keyvault_name",
+      "value": "meus-kv-dev-cptgbatch"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.src_ls_sql_conn_secret_name",
+      "value": "azure-sql-db-connection-string-dev"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_ls_adls_account_name",
+      "value": "meusdlsdevcptgbatch"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_container_name",
+      "value": "raw"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.sink_file_path",
+      "value": "output_folder/az_sql_cdc_parquet"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.watermark_file_path",
+      "value": "watermark_folder/az_sql_cdc"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.watermark_file_prefix",
+      "value": "watermark_"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.partition_level",
+      "value": "day"
+    },
+    {
+      "name": "$.properties.pipelines.parameters.successful_ingestion_metadata_file_path",
+      "value": "watermark_folder/az_sql_cdc/unprocessed_files"
+    }
+  ]
+}

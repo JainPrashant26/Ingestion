@@ -1,0 +1,52 @@
+{
+	"name": "ds_parquet",
+	"properties": {
+		"description": "Dataset to represent parquet file format.",
+		"linkedServiceName": {
+			"referenceName": "ls_az_adls",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"adls_account_name": {
+					"value": "@dataset().ls_adls_account_name",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"ls_adls_account_name": {
+				"type": "string"
+			},
+			"container": {
+				"type": "string"
+			},
+			"file_path": {
+				"type": "string"
+			},
+			"file_name": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().file_name",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().file_path",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().container",
+					"type": "Expression"
+				}
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

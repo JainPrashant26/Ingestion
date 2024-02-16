@@ -1,0 +1,9 @@
+{
+	"name": "managed-airflow-demo",
+	"location": "westus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "3451a55f-8ac5-48ba-93f5-ad4953d57876",
+		"tenantId": "638456b8-8343-4e48-9ebe-4f5cf9a1997d"
+	}
+}

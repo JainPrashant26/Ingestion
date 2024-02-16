@@ -1,0 +1,27 @@
+{
+	"name": "managed-airflow",
+	"properties": {
+		"type": "Airflow",
+		"typeProperties": {
+			"computeProperties": {
+				"location": "West Europe",
+				"computeSize": "Small",
+				"extraNodes": 0,
+				"enableAutoscale": false
+			},
+			"airflowProperties": {
+				"airflowVersion": "2.6.3",
+				"airflowEnvironmentVariables": null,
+				"airflowRequirements": [
+					"apache-airflow-providers-microsoft-azure"
+				],
+				"enableAADIntegration": true,
+				"userName": null,
+				"password": null,
+				"airflowEntityReferences": [],
+				"encryptedSecrets": [],
+				"secrets": null
+			}
+		}
+	}
+}
